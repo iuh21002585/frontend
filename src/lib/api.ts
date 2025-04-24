@@ -5,11 +5,12 @@ const API_URL = '/api';
 
 // Tạo instance của axios với base URL
 const api = axios.create({
-  baseURL: API_URL,
+  baseURL: import.meta.env.VITE_API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
 });
+
 
 // Cache lưu trữ dữ liệu API
 const apiCache = {
