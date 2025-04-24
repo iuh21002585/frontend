@@ -1,8 +1,8 @@
-# ThesisGuard - Hệ thống quản lý luận văn với công nghệ chống đạo văn
+# IUH_PLAGCHECK - Hệ thống quản lý luận văn với công nghệ chống đạo văn
 
 ## Giới thiệu dự án
 
-ThesisGuard là một nền tảng hiện đại giúp quản lý, lưu trữ và kiểm tra đạo văn cho luận văn và báo cáo tốt nghiệp. Hệ thống hỗ trợ:
+IUH_PLAGCHECK là một nền tảng hiện đại giúp quản lý, lưu trữ và kiểm tra đạo văn cho luận văn và báo cáo tốt nghiệp. Hệ thống hỗ trợ:
 
 - **Phát hiện đạo văn truyền thống**: Kiểm tra tài liệu với hàng triệu tài liệu đã xuất bản và nội dung web
 - **Phát hiện đạo văn AI**: Công nghệ tiên tiến giúp phát hiện nội dung được tạo bởi AI

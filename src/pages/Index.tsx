@@ -186,7 +186,7 @@ const Index = () => {
               viewport={{ once: true }}
               className="text-muted-foreground max-w-2xl mx-auto"
             >
-              ThesisGuard cung cấp các công cụ tiên tiến để phát hiện đạo văn và bảo vệ tính nguyên bản trong nghiên cứu học thuật
+              IUH_PLAGCHECK cung cấp các công cụ tiên tiến để phát hiện đạo văn và bảo vệ tính nguyên bản trong nghiên cứu học thuật
             </motion.p>
           </div>
 
@@ -286,7 +286,7 @@ const Index = () => {
           >
             <h2 className="text-3xl font-bold mb-6">Bắt đầu bảo vệ tính học thuật của bạn ngay hôm nay</h2>
             <p className="text-lg text-muted-foreground mb-8">
-              Đăng ký tài khoản miễn phí và trải nghiệm sức mạnh của ThesisGuard trong việc phát hiện và ngăn chặn đạo văn.
+              Đăng ký tài khoản miễn phí và trải nghiệm sức mạnh của IUH_PLAGCHECK trong việc phát hiện và ngăn chặn đạo văn.
             </p>
             <Button size="lg" className="bg-primary hover:bg-primary/90" asChild>
               <Link to="/register">Đăng ký ngay</Link>

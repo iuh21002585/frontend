@@ -5,7 +5,7 @@ const About = () => {
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-center">
-        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Giới thiệu về ThesisGuard</h1>
+        <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Giới thiệu về IUH_PLAGCHECK</h1>
         <p className="mx-auto max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
           Hệ thống bảo vệ luận văn thông minh giúp phát hiện đạo văn và nội dung AI
         </p>
@@ -14,12 +14,12 @@ const About = () => {
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Về ThesisGuard</CardTitle>
+            <CardTitle>Về IUH_PLAGCHECK</CardTitle>
             <CardDescription>Nhiệm vụ và tầm nhìn của chúng tôi</CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-gray-500 dark:text-gray-400">
-              ThesisGuard được phát triển nhằm bảo vệ tính nguyên bản của các luận văn học thuật.
+              IUH_PLAGCHECK được phát triển nhằm bảo vệ tính nguyên bản của các luận văn học thuật.
               Hệ thống sử dụng các thuật toán tiên tiến để phát hiện nội dung đạo văn và phát hiện 
               nội dung được tạo bởi AI, giúp đảm bảo tính toàn vẹn học thuật.
             </p>
@@ -45,7 +45,7 @@ const About = () => {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Thuật toán và công nghệ</CardTitle>
-            <CardDescription>Các thuật toán và công nghệ tiên tiến được sử dụng trong ThesisGuard</CardDescription>
+            <CardDescription>Các thuật toán và công nghệ tiên tiến được sử dụng trong IUH_PLAGCHECK</CardDescription>
           </CardHeader>
           <CardContent>
             <Tabs defaultValue="plagiarism" className="w-full">
@@ -57,7 +57,7 @@ const About = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Hệ thống phát hiện đạo văn</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    ThesisGuard sử dụng kết hợp nhiều thuật toán để đảm bảo phát hiện đạo văn một cách hiệu quả và chính xác:
+                    IUH_PLAGCHECK sử dụng kết hợp nhiều thuật toán để đảm bảo phát hiện đạo văn một cách hiệu quả và chính xác:
                   </p>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg">
@@ -66,7 +66,7 @@ const About = () => {
                         Thuật toán này sử dụng hàm băm (hash function) để so sánh nhanh các đoạn văn bản, giúp phát hiện hiệu quả các đoạn trùng lặp chính xác. Độ phức tạp O(n+m) giúp xử lý nhanh cả tài liệu dài.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Quét nhanh toàn bộ luận văn để tìm các đoạn trùng lặp với cơ sở dữ liệu luận văn</li>
                           <li>Kiểm tra chính xác các trích dẫn có được ghi nguồn đầy đủ không</li>
@@ -80,7 +80,7 @@ const About = () => {
                         Biến đổi đoạn văn bản thành các vector trong không gian ngữ nghĩa để so sánh ý nghĩa, không chỉ dừng lại ở cấu trúc câu. Phương pháp này giúp phát hiện đạo văn ngay cả khi người viết đã paraphrase nội dung.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Phân tích ngữ nghĩa của các đoạn văn để phát hiện đạo văn được viết lại</li>
                           <li>Hỗ trợ phát hiện đạo văn đa ngôn ngữ thông qua không gian vector chung</li>
@@ -94,7 +94,7 @@ const About = () => {
                         Sử dụng các mô hình ngôn ngữ tiên tiến như BERT để hiểu ngữ cảnh và ý nghĩa của văn bản, giúp phát hiện đạo văn khi nội dung đã được viết lại nhưng giữ nguyên ý chính.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Phân tích các luận điểm và lập luận chính để tìm các tương đồng về mặt khái niệm</li>
                           <li>Tích hợp trong mô-đun "Phân tích ý tưởng sâu" để đánh giá tính độc đáo của nội dung</li>
@@ -108,7 +108,7 @@ const About = () => {
                         Thuật toán so khớp chuỗi cục bộ được điều chỉnh cho văn bản, giúp tìm ra các đoạn tương đồng ngay cả khi có sự thay đổi, thêm bớt từ ngữ.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Được sử dụng trong tính năng "So sánh đoạn văn chi tiết" để tìm các phần tương đồng một cách chính xác</li>
                           <li>Tạo các báo cáo chi tiết về các đoạn văn được sửa đổi nhẹ từ nguồn gốc</li>
@@ -147,7 +147,7 @@ const About = () => {
                   <div className="mt-4 bg-green-50 dark:bg-green-950/30 p-4 rounded-lg">
                     <h4 className="font-medium text-green-700 dark:text-green-400">So sánh với các giải pháp kiểm tra đạo văn phổ biến</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      Các thuật toán được sử dụng trong ThesisGuard cũng được áp dụng trong nhiều phần mềm kiểm tra đạo văn chuyên nghiệp hàng đầu:
+                      Các thuật toán được sử dụng trong IUH_PLAGCHECK cũng được áp dụng trong nhiều phần mềm kiểm tra đạo văn chuyên nghiệp hàng đầu:
                     </p>
                     <div className="grid gap-4 md:grid-cols-3 mt-3">
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -156,7 +156,7 @@ const About = () => {
                           Turnitin
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Sử dụng thuật toán tương tự Rabin-Karp để tạo fingerprint văn bản và thuật toán so sánh chuỗi tiên tiến để phát hiện tương đồng. ThesisGuard áp dụng phương pháp tương tự, nhưng đã được tối ưu hóa cho tài liệu tiếng Việt.
+                          Sử dụng thuật toán tương tự Rabin-Karp để tạo fingerprint văn bản và thuật toán so sánh chuỗi tiên tiến để phát hiện tương đồng. IUH_PLAGCHECK áp dụng phương pháp tương tự, nhưng đã được tối ưu hóa cho tài liệu tiếng Việt.
                         </p>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -165,7 +165,7 @@ const About = () => {
                           Copyscape
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Sử dụng phương pháp Semantic Space Vectors tương tự để phát hiện sao chép nội dung. ThesisGuard sử dụng kỹ thuật tương tự nhưng tích hợp các mô hình ngôn ngữ đặc biệt cho tiếng Việt để tăng độ chính xác.
+                          Sử dụng phương pháp Semantic Space Vectors tương tự để phát hiện sao chép nội dung. IUH_PLAGCHECK sử dụng kỹ thuật tương tự nhưng tích hợp các mô hình ngôn ngữ đặc biệt cho tiếng Việt để tăng độ chính xác.
                         </p>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -174,12 +174,12 @@ const About = () => {
                           Grammarly
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Sử dụng các mô hình BERT để phân tích nội dung. ThesisGuard cũng áp dụng các mô hình Transformer tương tự, với điểm khác biệt là đã được tinh chỉnh đặc biệt cho luận văn học thuật tiếng Việt.
+                          Sử dụng các mô hình BERT để phân tích nội dung. IUH_PLAGCHECK cũng áp dụng các mô hình Transformer tương tự, với điểm khác biệt là đã được tinh chỉnh đặc biệt cho luận văn học thuật tiếng Việt.
                         </p>
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic">
-                      Mặc dù các thuật toán cơ bản có điểm tương đồng, ThesisGuard đã được tối ưu hóa đặc biệt cho tiếng Việt và các tài liệu học thuật, giúp tăng cường khả năng phát hiện đạo văn trong luận văn của sinh viên Việt Nam.
+                      Mặc dù các thuật toán cơ bản có điểm tương đồng, IUH_PLAGCHECK đã được tối ưu hóa đặc biệt cho tiếng Việt và các tài liệu học thuật, giúp tăng cường khả năng phát hiện đạo văn trong luận văn của sinh viên Việt Nam.
                     </p>
                   </div>
                 </div>
@@ -188,7 +188,7 @@ const About = () => {
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Hệ thống phát hiện nội dung tạo bởi AI</h3>
                   <p className="text-gray-500 dark:text-gray-400">
-                    ThesisGuard tích hợp các công nghệ tiên tiến để phát hiện nội dung được tạo bởi các mô hình ngôn ngữ lớn như GPT:
+                    IUH_PLAGCHECK tích hợp các công nghệ tiên tiến để phát hiện nội dung được tạo bởi các mô hình ngôn ngữ lớn như GPT:
                   </p>
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2 bg-slate-50 dark:bg-slate-900 p-3 rounded-lg">
@@ -197,7 +197,7 @@ const About = () => {
                         Sử dụng mô hình RoBERTa được tinh chỉnh đặc biệt để phân biệt giữa văn bản do con người viết và văn bản do AI tạo ra, với độ chính xác trên 95% trong nhiều ngữ cảnh khác nhau.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Phân tích các đoạn văn để xác định nguồn gốc của nội dung</li>
                           <li>Đánh giá mức độ tương đồng giữa văn bản và nội dung được tạo bởi AI</li>
@@ -211,7 +211,7 @@ const About = () => {
                         Phân tích mức độ "bất ngờ" của văn bản thông qua chỉ số perplexity. Văn bản AI thường có perplexity thấp hơn và độ nhất quán cao hơn so với văn bản của con người.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Đánh giá mức độ phức tạp của văn bản để xác định khả năng được tạo bởi AI</li>
                           <li>So sánh mức độ perplexity của văn bản với cơ sở dữ liệu để xác định nguồn gốc</li>
@@ -225,7 +225,7 @@ const About = () => {
                         Đo lường độ đa dạng từ vựng và entropy của văn bản, vì nội dung AI thường có mô hình thống kê khác biệt so với văn bản con người viết.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Đánh giá mức độ đa dạng từ vựng của văn bản để xác định khả năng được tạo bởi AI</li>
                           <li>So sánh mức độ entropy của văn bản với cơ sở dữ liệu để xác định nguồn gốc</li>
@@ -239,7 +239,7 @@ const About = () => {
                         Phát hiện các watermark vô hình mà một số mô hình AI nhúng vào đầu ra, như các mô hình phân phối token đặc biệt hoặc các pattern ẩn.
                       </p>
                       <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong ThesisGuard:</p>
+                        <p className="text-sm font-medium text-blue-600 dark:text-blue-400">Ứng dụng trong IUH_PLAGCHECK:</p>
                         <ul className="text-xs list-disc pl-4 mt-1 text-gray-600 dark:text-gray-300">
                           <li>Phát hiện các watermark vô hình trong văn bản để xác định khả năng được tạo bởi AI</li>
                           <li>So sánh các pattern ẩn trong văn bản với cơ sở dữ liệu để xác định nguồn gốc</li>
@@ -276,9 +276,9 @@ const About = () => {
                   </div>
 
                   <div className="mt-4 bg-yellow-50 dark:bg-yellow-950/30 p-4 rounded-lg">
-                    <h4 className="font-medium text-yellow-700 dark:text-yellow-400">Ứng dụng thực tế trong ThesisGuard</h4>
+                    <h4 className="font-medium text-yellow-700 dark:text-yellow-400">Ứng dụng thực tế trong IUH_PLAGCHECK</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      Hệ thống phát hiện nội dung AI của ThesisGuard được áp dụng trong các tình huống sau:
+                      Hệ thống phát hiện nội dung AI của IUH_PLAGCHECK được áp dụng trong các tình huống sau:
                     </p>
                     <ul className="mt-2 space-y-1 text-sm text-gray-600 dark:text-gray-400">
                       <li className="flex items-start gap-2">
@@ -303,7 +303,7 @@ const About = () => {
                   <div className="mt-4 bg-purple-50 dark:bg-purple-950/30 p-4 rounded-lg">
                     <h4 className="font-medium text-purple-700 dark:text-purple-400">So sánh với các giải pháp phát hiện nội dung AI phổ biến</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                      Các công nghệ được sử dụng trong ThesisGuard có điểm tương đồng với các công cụ phát hiện nội dung AI nổi tiếng khác:
+                      Các công nghệ được sử dụng trong IUH_PLAGCHECK có điểm tương đồng với các công cụ phát hiện nội dung AI nổi tiếng khác:
                     </p>
                     <div className="grid gap-4 md:grid-cols-3 mt-3">
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -312,7 +312,7 @@ const About = () => {
                           GPTZero
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Sử dụng phương pháp phân tích perplexity và burstiness để phát hiện nội dung AI. ThesisGuard áp dụng phương pháp tương tự, cùng với các thuật toán đặc biệt cho tiếng Việt để tăng độ chính xác.
+                          Sử dụng phương pháp phân tích perplexity và burstiness để phát hiện nội dung AI. IUH_PLAGCHECK áp dụng phương pháp tương tự, cùng với các thuật toán đặc biệt cho tiếng Việt để tăng độ chính xác.
                         </p>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -321,7 +321,7 @@ const About = () => {
                           OpenAI Text Classifier
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Sử dụng mô hình RoBERTa để phân loại văn bản. ThesisGuard tích hợp mô hình tương tự nhưng đã được huấn luyện đặc biệt với dữ liệu luận văn tiếng Việt để nhận diện chính xác hơn.
+                          Sử dụng mô hình RoBERTa để phân loại văn bản. IUH_PLAGCHECK tích hợp mô hình tương tự nhưng đã được huấn luyện đặc biệt với dữ liệu luận văn tiếng Việt để nhận diện chính xác hơn.
                         </p>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-3 rounded shadow-sm">
@@ -330,12 +330,12 @@ const About = () => {
                           ZeroGPT
                         </h5>
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          Phân tích các pattern ngôn ngữ và cách sử dụng từ vựng. ThesisGuard mở rộng phương pháp này với công nghệ phân tích entropy và đa dạng từ vựng cho tiếng Việt.
+                          Phân tích các pattern ngôn ngữ và cách sử dụng từ vựng. IUH_PLAGCHECK mở rộng phương pháp này với công nghệ phân tích entropy và đa dạng từ vựng cho tiếng Việt.
                         </p>
                       </div>
                     </div>
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 italic">
-                      ThesisGuard không chỉ áp dụng các thuật toán hiện đại mà còn tích hợp nhiều kỹ thuật phát hiện khác nhau, tạo hệ thống đánh giá đa chiều để xác định chính xác nội dung được tạo bởi AI trong luận văn tiếng Việt.
+                      IUH_PLAGCHECK không chỉ áp dụng các thuật toán hiện đại mà còn tích hợp nhiều kỹ thuật phát hiện khác nhau, tạo hệ thống đánh giá đa chiều để xác định chính xác nội dung được tạo bởi AI trong luận văn tiếng Việt.
                     </p>
                   </div>
                 </div>
@@ -347,7 +347,7 @@ const About = () => {
         <Card className="md:col-span-2">
           <CardHeader>
             <CardTitle>Đội ngũ phát triển</CardTitle>
-            <CardDescription>Những người đứng sau ThesisGuard</CardDescription>
+            <CardDescription>Những người đứng sau IUH_PLAGCHECK</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             <div className="flex flex-col items-center space-y-2 text-center">

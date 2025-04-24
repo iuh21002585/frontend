@@ -1,5 +1,5 @@
 /**
- * Script để sửa vấn đề mật khẩu trong ThesisGuard
+ * Script để sửa vấn đề mật khẩu trong IUH_PLAGCHECK
  * 
  * Vấn đề: Mật khẩu trong cơ sở dữ liệu được lưu ở dạng văn bản thuần túy (plain text)
  * trong khi mô hình User có middleware pre-save sử dụng bcrypt để mã hóa mật khẩu.
@@ -23,7 +23,7 @@ const rl = readline.createInterface({
 
 // Hiển thị menu chính
 function showMainMenu() {
-  console.log('\n===== THESISGUARD - CÔNG CỤ SỬA VẤN ĐỀ MẬT KHẨU =====');
+  console.log('\n===== IUH_PLAGCHECK - CÔNG CỤ SỬA VẤN ĐỀ MẬT KHẨU =====');
   console.log('1. Kiểm tra vấn đề đăng nhập cho một tài khoản');
   console.log('2. Đặt lại mật khẩu cho tất cả tài khoản (thành "123456")');
   console.log('3. Thoát');
@@ -134,7 +134,7 @@ function returnToMainMenu() {
 }
 
 // Bắt đầu chương trình
-console.log('Chào mừng đến với công cụ sửa vấn đề mật khẩu ThesisGuard!');
+console.log('Chào mừng đến với công cụ sửa vấn đề mật khẩu IUH_PLAGCHECK!');
 console.log('LƯU Ý: Đảm bảo rằng máy chủ backend đang chạy tại http://localhost:5000');
 
 showMainMenu();

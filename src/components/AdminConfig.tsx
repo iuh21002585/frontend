@@ -217,7 +217,7 @@ const AdminConfig = () => {
         <CardHeader>
           <CardTitle>Cấu hình hệ thống</CardTitle>
           <CardDescription>
-            Thiết lập các cấu hình chung cho hệ thống ThesisGuard
+            Thiết lập các cấu hình chung cho hệ thống IUH_PLAGCHECK
           </CardDescription>
         </CardHeader>
         <CardContent>

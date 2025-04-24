@@ -157,7 +157,7 @@ const Navbar = () => {
             <Link to="/" className="flex items-center gap-2">
               <Shield className="w-6 h-6 text-primary" />
               <span className="text-xl font-bold text-gray-900 dark:text-white">
-                ThesisGuard
+                IUH_PLAGCHECK
               </span>
             </Link>
           </div>
@@ -347,7 +347,7 @@ const Navbar = () => {
                     <div className="flex items-center justify-between mb-6">
                       <div className="flex items-center gap-2">
                         <Shield className="w-6 h-6 text-primary" />
-                        <span className="text-lg font-bold">ThesisGuard</span>
+                        <span className="text-lg font-bold">IUH_PLAGCHECK</span>
                       </div>
                       <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
                         <X className="h-5 w-5" />

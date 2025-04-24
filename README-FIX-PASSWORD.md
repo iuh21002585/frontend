@@ -1,8 +1,8 @@
-# Hướng dẫn khắc phục vấn đề đăng nhập của ThesisGuard
+# Hướng dẫn khắc phục vấn đề đăng nhập của IUH_PLAGCHECK
 
 ## Vấn đề
 
-Ứng dụng ThesisGuard hiện đang gặp vấn đề người dùng không thể đăng nhập do cách xử lý mật khẩu không nhất quán:
+Ứng dụng IUH_PLAGCHECK hiện đang gặp vấn đề người dùng không thể đăng nhập do cách xử lý mật khẩu không nhất quán:
 
 - **Nguyên nhân:** Mật khẩu trong cơ sở dữ liệu đang được lưu dưới dạng văn bản thuần túy (plain text), trong khi mô hình User có middleware pre-save sử dụng bcrypt để mã hóa mật khẩu.
 - **Hậu quả:** Khi người dùng đăng nhập, hệ thống so sánh mật khẩu nhập vào với mật khẩu đã mã hóa trong cơ sở dữ liệu, dẫn đến không khớp và đăng nhập thất bại.
