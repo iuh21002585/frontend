@@ -106,7 +106,7 @@ const AdminDashboard = () => {
         setActivitiesLoading(true);
         // Gọi API lấy hoạt động gần đây
         try {
-          const { data } = await api.get('/api/activities?limit=20');
+          const { data } = await api.get('/activities?limit=20');
           
           // Chuyển đổi dữ liệu từ API sang định dạng hiển thị
           const formattedActivities = Array.isArray(data) ? 
