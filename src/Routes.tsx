@@ -8,6 +8,8 @@ import AdminDashboard from "./pages/AdminDashboard";
 import ThesisView from "./pages/ThesisView";
 import Profile from "./pages/Profile";
 import About from "./pages/About";
+import AuthSuccess from "./pages/AuthSuccess";
+import VerifyEmail from "./pages/VerifyEmail";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import HomeRedirect from "./components/HomeRedirect";
@@ -23,6 +25,8 @@ const AppRoutes = () => {
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
       <Route path="/about" element={<About />} />
+      <Route path="/auth-success" element={<AuthSuccess />} />
+      <Route path="/verify-email" element={<VerifyEmail />} />
       <Route 
         path="/dashboard" 
         element={
