@@ -1,11 +1,24 @@
 import axios from 'axios';
 
-// Use relative API URL for the proxy to work correctly
-const API_URL = '/api';
+// Determine the API base URL based on environment
+const getApiBaseUrl = () => {
+  // In production, use the deployed backend URL
+  if (import.meta.env.PROD) {
+    // Replace this with your actual backend URL on Render
+    return 'https://backend-6c5g.onrender.com/api';
+  }
+  // In development, use the relative path for Vite's proxy
+  return '/api';
+};
+
+// Use the appropriate API URL for the environment
+const API_URL = getApiBaseUrl();
+
+console.log('API URL configured as:', API_URL);
 
 // Tạo instance của axios với base URL
 const api = axios.create({
-  baseURL: API_URL,  // Using the relative path so the Vite proxy works
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
