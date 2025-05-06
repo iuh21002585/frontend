@@ -1,11 +1,11 @@
 import axios from 'axios';
 
-// Chỉ sử dụng đường dẫn tương đối, để Vite proxy xử lý
+// Use relative API URL for the proxy to work correctly
 const API_URL = '/api';
 
 // Tạo instance của axios với base URL
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: API_URL,  // Using the relative path so the Vite proxy works
   headers: {
     'Content-Type': 'application/json',
   },
