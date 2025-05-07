@@ -11,19 +11,24 @@
 
 Chúng tôi cung cấp hai giải pháp để khắc phục vấn đề này:
 
+## Hướng dẫn sử dụng
+
+### Điều kiện tiên quyết
+1. Đảm bảo máy chủ backend đang chạy (bạn cần biết URL của backend API)
+2. Đã cài đặt Node.js trên máy tính của bạn
+
 ### 1. Sử dụng công cụ sửa mật khẩu tự động
 
 Chúng tôi đã tạo ra một script đơn giản có thể giúp bạn kiểm tra và sửa vấn đề mật khẩu:
 
-1. Đảm bảo máy chủ backend đang chạy (mặc định tại http://localhost:5000)
-2. Mở terminal tại thư mục gốc của dự án
-3. Chạy lệnh sau để thực thi script:
+1. Mở terminal tại thư mục gốc của dự án
+2. Chạy lệnh sau để thực thi script:
 
 ```bash
 node fix-password.js
 ```
 
-4. Làm theo hướng dẫn trên màn hình để:
+3. Làm theo hướng dẫn trên màn hình để:
    - Kiểm tra vấn đề đăng nhập cho một tài khoản cụ thể
    - Đặt lại mật khẩu cho tất cả tài khoản thành "123456"
 

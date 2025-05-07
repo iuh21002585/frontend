@@ -14,7 +14,19 @@
 const readline = require('readline');
 const axios = require('axios');
 
-const API_URL = 'http://localhost:5000/api';
+// Sử dụng biến môi trường hoặc fallback về localhost nếu chạy ở môi trường local
+const API_URL = process.env.BACKEND_URL 
+  ? `${process.env.BACKEND_URL}/api` 
+  : 'https://backend-6c5g.onrender.com/api';
+
+// Cho phép ghi đè URL API từ dòng lệnh
+const cliArgs = process.argv.slice(2);
+const apiArgIndex = cliArgs.findIndex(arg => arg === '--api');
+if (apiArgIndex !== -1 && cliArgs.length > apiArgIndex + 1) {
+  API_URL = cliArgs[apiArgIndex + 1];
+}
+
+console.log(`Kết nối tới API: ${API_URL}`);
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -135,6 +147,6 @@ function returnToMainMenu() {
 
 // Bắt đầu chương trình
 console.log('Chào mừng đến với công cụ sửa vấn đề mật khẩu IUH_PLAGCHECK!');
-console.log('LƯU Ý: Đảm bảo rằng máy chủ backend đang chạy tại http://localhost:5000');
+console.log(`LƯU Ý: Đảm bảo rằng máy chủ backend đang chạy và truy cập được tại ${API_URL}`);
 
 showMainMenu();
