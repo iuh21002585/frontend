@@ -2,11 +2,35 @@
 const express = require('express');
 const path = require('path');
 const fs = require('fs');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 
 console.log('Starting frontend server with CommonJS...');
 console.log('Environment:', process.env.NODE_ENV);
+
+// Backend URL - make sure this is correct and accessible
+const backendUrl = process.env.BACKEND_URL || 'https://backend-6c5g.onrender.com';
+console.log(`Will proxy API requests to: ${backendUrl}`);
+
+// Proxy all /api requests to the backend server
+// IMPORTANT: This must be defined BEFORE the static file middleware
+app.use('/api', createProxyMiddleware({
+  target: backendUrl,
+  changeOrigin: true,
+  pathRewrite: { '^/api': '/api' }, // Don't rewrite the path
+  logLevel: 'debug',
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`Proxying ${req.method} ${req.url} to ${backendUrl}${req.url}`);
+  },
+  onError: (err, req, res) => {
+    console.error('Proxy error:', err);
+    res.writeHead(500, {
+      'Content-Type': 'text/plain',
+    });
+    res.end('Proxy error: Could not connect to backend server');
+  }
+}));
 
 // Path to the build directory
 const distPath = path.join(__dirname, 'dist');
@@ -21,9 +45,15 @@ if (!fs.existsSync(distPath)) {
 // Serve static files from the dist directory
 app.use(express.static(distPath));
 
-// Handle all routes by serving index.html to allow React Router to handle routing
+// Handle all non-API routes by serving index.html to allow React Router to handle routing
 app.get('*', (req, res) => {
-  console.log(`Serving index.html for route: ${req.url}`);
+  // Skip handling API requests (they should have been handled by the proxy middleware)
+  if (req.url.startsWith('/api/')) {
+    console.warn(`API request slipped through to catch-all handler: ${req.url}`);
+    return res.status(404).send('API endpoint not found');
+  }
+  
+  console.log(`Serving index.html for client route: ${req.url}`);
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
