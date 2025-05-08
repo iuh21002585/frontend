@@ -3,6 +3,7 @@ import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
 import fs from 'fs';
+import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,6 +20,22 @@ app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
+
+// Proxy API requests to the backend
+const backendUrl = process.env.BACKEND_URL || 'https://backend-6c5g.onrender.com';
+console.log(`Proxying /api requests to: ${backendUrl}`);
+
+app.use('/api', createProxyMiddleware({
+  target: backendUrl,
+  changeOrigin: true,
+  logLevel: 'debug',
+  pathRewrite: {
+    '^/api': '/api' // Don't rewrite the path
+  },
+  onProxyReq: (proxyReq, req, res) => {
+    console.log(`Proxying ${req.method} ${req.url} to ${backendUrl}${req.url}`);
+  }
+}));
 
 // Check if the dist directory exists
 const distPath = path.join(__dirname, 'dist');
