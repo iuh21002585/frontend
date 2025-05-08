@@ -3,6 +3,8 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
+const http = require('http');
+const https = require('https');
 
 const app = express();
 
@@ -13,11 +15,22 @@ console.log('Environment:', process.env.NODE_ENV);
 const backendUrl = process.env.BACKEND_URL || 'https://backend-6c5g.onrender.com';
 console.log(`Will proxy API requests to: ${backendUrl}`);
 
-// Special middleware for Google OAuth routes to enable proper logging
-app.use('/api/users/google*', (req, res, next) => {
-  console.log(`[OAUTH ROUTE] ${req.method} ${req.url}`);
+// Increase default timeout for requests
+http.globalAgent.maxSockets = 50;
+https.globalAgent.maxSockets = 50;
+http.globalAgent.keepAlive = true;
+https.globalAgent.keepAlive = true;
+
+// Add a special direct handler for Google OAuth routes for extra reliability
+app.get('/api/users/google', (req, res) => {
+  console.log('Direct handling of Google OAuth request');
   console.log('Headers:', JSON.stringify(req.headers, null, 2));
-  next();
+  console.log('Query:', JSON.stringify(req.query, null, 2));
+  
+  // Redirect directly to the backend Google auth endpoint
+  const redirectUrl = `${backendUrl}/api/users/google`;
+  console.log(`Redirecting to: ${redirectUrl}`);
+  res.redirect(redirectUrl);
 });
 
 // Proxy all /api requests to the backend server
@@ -29,6 +42,9 @@ app.use('/api', createProxyMiddleware({
   xfwd: true, // Add X-Forwarded headers
   followRedirects: true, // Follow redirects needed for OAuth flow
   logLevel: 'debug',
+  pathRewrite: path => path, // Keep the path as is
+  timeout: 60000, // Increase timeout to 60 seconds
+  proxyTimeout: 60000,
   onProxyReq: (proxyReq, req, res) => {
     console.log(`Proxying ${req.method} ${req.url} to ${backendUrl}${req.url}`);
     
@@ -38,6 +54,10 @@ app.use('/api', createProxyMiddleware({
       Object.keys(req.headers).forEach(key => {
         proxyReq.setHeader(key, req.headers[key]);
       });
+      
+      // Add additional headers that might help
+      proxyReq.setHeader('x-forwarded-host', new URL(backendUrl).host);
+      proxyReq.setHeader('x-forwarded-proto', new URL(backendUrl).protocol.replace(':', ''));
     }
   },
   onProxyRes: (proxyRes, req, res) => {
@@ -50,10 +70,17 @@ app.use('/api', createProxyMiddleware({
   },
   onError: (err, req, res) => {
     console.error('Proxy error:', err);
+    
+    // Handle Google OAuth errors specially
+    if (req.url.includes('/google')) {
+      console.log('Error with Google OAuth request, redirecting to backend');
+      return res.redirect(`${backendUrl}${req.url}`);
+    }
+    
     res.writeHead(500, {
       'Content-Type': 'text/plain',
     });
-    res.end(`Proxy error: Could not connect to backend server at ${backendUrl}`);
+    res.end(`Proxy error: Could not connect to backend server at ${backendUrl}. Error: ${err.message}`);
   }
 }));
 
