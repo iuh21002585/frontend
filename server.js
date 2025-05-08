@@ -11,18 +11,23 @@ const app = express();
 console.log('Starting frontend server...');
 console.log('Environment:', process.env.NODE_ENV);
 
+// Middleware để log tất cả các requests
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
+
 // Serve static files from the dist directory
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Explicitly handle the auth-success route
-app.get('/auth-success', (req, res) => {
+// Đặc biệt xử lý route auth-success
+app.get('/auth-success*', (req, res) => {
   console.log('Auth success route accessed with query params:', req.query);
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Handle all other routes by serving index.html to allow React Router to handle routing
+// Handle all routes by serving index.html to allow React Router to handle routing
 app.get('*', (req, res) => {
-  console.log(`Received request for: ${req.originalUrl}`);
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
