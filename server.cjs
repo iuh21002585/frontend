@@ -1,19 +1,22 @@
-// Simple Express server to serve the React frontend application
-import express from 'express';
-import { fileURLToPath } from 'url';
-import path from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Simple Express server using CommonJS syntax
+const express = require('express');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
-console.log('Starting frontend server...');
+console.log('Starting frontend server with CommonJS...');
 console.log('Environment:', process.env.NODE_ENV);
 
 // Path to the build directory
 const distPath = path.join(__dirname, 'dist');
 console.log(`Serving static files from: ${distPath}`);
+
+// Check if dist directory exists
+if (!fs.existsSync(distPath)) {
+  console.error(`ERROR: The 'dist' directory does not exist at: ${distPath}`);
+  console.error('Make sure you have run "npm run build" before starting the server');
+}
 
 // Serve static files from the dist directory
 app.use(express.static(distPath));
