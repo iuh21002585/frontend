@@ -2,6 +2,7 @@
 import express from 'express';
 import { fileURLToPath } from 'url';
 import path from 'path';
+import fs from 'fs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -10,25 +11,43 @@ const app = express();
 
 console.log('Starting frontend server...');
 console.log('Environment:', process.env.NODE_ENV);
+console.log('Frontend URL:', process.env.FRONTEND_URL || 'not set');
+console.log('Backend URL:', process.env.BACKEND_URL || 'not set');
 
-// Middleware để log tất cả các requests
+// Middleware to log all requests
 app.use((req, res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
   next();
 });
 
-// Serve static files from the dist directory
-app.use(express.static(path.join(__dirname, 'dist')));
+// Check if the dist directory exists
+const distPath = path.join(__dirname, 'dist');
+if (!fs.existsSync(distPath)) {
+  console.error(`ERROR: The 'dist' directory does not exist at: ${distPath}`);
+  console.error('Make sure you have run "npm run build" before starting the server');
+}
 
-// Đặc biệt xử lý route auth-success
-app.get('/auth-success*', (req, res) => {
-  console.log('Auth success route accessed with query params:', req.query);
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+// Serve static files from the dist directory
+app.use(express.static(distPath));
+
+// Explicitly handle common asset paths to avoid 404s
+const commonAssetExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot'];
+app.get(`*`, (req, res, next) => {
+  if (commonAssetExtensions.some(ext => req.url.endsWith(ext))) {
+    // If the asset doesn't exist, continue to next handler
+    const filePath = path.join(distPath, req.url);
+    if (fs.existsSync(filePath)) {
+      return res.sendFile(filePath);
+    }
+    console.log(`Asset not found: ${filePath}`);
+  }
+  next();
 });
 
-// Handle all routes by serving index.html to allow React Router to handle routing
+// Handle all other routes by serving index.html to allow React Router to handle routing
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dist', 'index.html'));
+  console.log(`Serving index.html for route: ${req.url}`);
+  res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Set the port, using environment variable or default to 8080
@@ -37,5 +56,6 @@ const PORT = process.env.PORT || 8080;
 // Start the server
 app.listen(PORT, () => {
   console.log(`Frontend server is running on port ${PORT}`);
-  console.log(`Serving static files from: ${path.join(__dirname, 'dist')}`);
+  console.log(`Serving static files from: ${distPath}`);
+  console.log(`Server is ready to handle requests!`);
 });
