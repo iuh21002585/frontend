@@ -12,14 +12,30 @@ const GoogleLoginButton = ({
   
   // Function to handle Google login
   const handleGoogleLogin = () => {
-    // Check if API URL already contains /api to avoid duplication
-    const apiBaseUrl = import.meta.env.VITE_API_URL || '';
-    const googleAuthUrl = apiBaseUrl.endsWith('/api') 
-      ? `${apiBaseUrl}/users/google` 
-      : `${apiBaseUrl}/users/google`;
-    
-    // Redirect to Google OAuth endpoint on our backend
-    window.location.href = googleAuthUrl;
+    try {
+      // For production vs development environment
+      let googleAuthUrl;
+      
+      if (import.meta.env.PROD) {
+        // In production, use absolute URL for direct server-to-server OAuth
+        googleAuthUrl = '/api/users/google';
+        console.log('Using production Google auth URL:', googleAuthUrl);
+      } else {
+        // In development, use the VITE_API_URL from environment
+        const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
+        googleAuthUrl = `${apiBaseUrl}/users/google`;
+        console.log('Using development Google auth URL:', googleAuthUrl);
+      }
+      
+      // Log the navigation for debugging
+      console.log('Navigating to Google OAuth URL:', googleAuthUrl);
+      
+      // Redirect to Google OAuth endpoint on our backend
+      window.location.href = googleAuthUrl;
+    } catch (error) {
+      console.error('Error initiating Google login:', error);
+      alert('Failed to connect to Google login. Please try again.');
+    }
   };
 
   return (
