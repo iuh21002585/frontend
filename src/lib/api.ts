@@ -2,11 +2,17 @@ import axios from 'axios';
 
 // Determine the API base URL based on environment
 const getApiBaseUrl = () => {
-  // In production, use the deployed backend URL
-  if (import.meta.env.PROD) {
-    // Sử dụng URL tuyệt đối cho backend API
+  // Kiểm tra xem ứng dụng có đang chạy trên render.com không
+  const isOnRender = typeof window !== 'undefined' && 
+                     window.location && 
+                     window.location.hostname && 
+                     window.location.hostname.includes('render.com');
+  
+  // In production or on render.com, use the full backend URL
+  if (import.meta.env.PROD || isOnRender) {
     return 'https://backend-6c5g.onrender.com/api';
   }
+  
   // In development, use the relative path for Vite's proxy
   return '/api';
 };
