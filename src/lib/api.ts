@@ -4,7 +4,7 @@ import axios from 'axios';
 const getApiBaseUrl = () => {
   // In production, use the deployed backend URL
   if (import.meta.env.PROD) {
-    // Replace this with your actual backend URL on Render
+    // Sử dụng URL tuyệt đối cho backend API
     return 'https://backend-6c5g.onrender.com/api';
   }
   // In development, use the relative path for Vite's proxy
@@ -51,15 +51,25 @@ const apiCache = {
   
   // Lấy dữ liệu từ cache
   get(key) {
+    const data = this.data.get(key);
     const timestamp = this.timestamp.get(key);
-    const expiration = this.expirationTime[key] || this.expirationTime.default;
     
-    // Nếu dữ liệu đã hết hạn hoặc không tồn tại
-    if (!timestamp || (Date.now() - timestamp > expiration)) {
+    if (!data || !timestamp) {
       return null;
     }
     
-    return this.data.get(key);
+    // Kiểm tra thời gian hết hạn
+    const now = Date.now();
+    // Xác định thời gian hết hạn cho endpoint này hoặc sử dụng mặc định
+    const expiryTime = this.expirationTime[key.split('?')[0]] || this.expirationTime.default;
+    
+    if (now - timestamp > expiryTime) {
+      // Cache đã hết hạn
+      this.remove(key);
+      return null;
+    }
+    
+    return data;
   },
   
   // Xóa một mục khỏi cache
