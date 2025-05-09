@@ -62,9 +62,6 @@ const formSchema = z.object({
   abstract: z.string().min(20, {
     message: "Tóm tắt phải có ít nhất 20 ký tự",
   }),
-  faculty: z.string().min(2, {
-    message: "Vui lòng chọn khoa",
-  }),
   checkAiPlagiarism: z.boolean().default(true),
   checkTraditionalPlagiarism: z.boolean().default(true),
 });
@@ -94,7 +91,6 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
     defaultValues: {
       title: "",
       abstract: "",
-      faculty: "",
       checkAiPlagiarism: true,
       checkTraditionalPlagiarism: true,
     },
@@ -148,7 +144,6 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
           formData.append('file', currentFile.file);
           formData.append('title', i === 0 ? values.title : `${values.title} - Phần ${i+1}`);
           formData.append('abstract', values.abstract);
-          formData.append('faculty', values.faculty);
           formData.append('checkAiPlagiarism', values.checkAiPlagiarism.toString());
           formData.append('checkTraditionalPlagiarism', values.checkTraditionalPlagiarism.toString());
           
@@ -401,37 +396,6 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
                       <FormDescription>
                         Tóm tắt ngắn gọn nội dung chính của luận văn
                       </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
-              
-              <motion.div variants={itemVariants}>
-                <FormField
-                  control={form.control}
-                  name="faculty"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Khoa</FormLabel>
-                      <Select
-                        onValueChange={field.onChange}
-                        defaultValue={field.value}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Chọn khoa của bạn" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="cntt">Công nghệ thông tin</SelectItem>
-                          <SelectItem value="dtvt">Điện tử viễn thông</SelectItem>
-                          <SelectItem value="cokhi">Cơ khí</SelectItem>
-                          <SelectItem value="diendt">Điện - Điện tử</SelectItem>
-                          <SelectItem value="xaydung">Xây dựng</SelectItem>
-                          <SelectItem value="other">Khác</SelectItem>
-                        </SelectContent>
-                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
