@@ -13,21 +13,11 @@ const GoogleLoginButton = ({
   // Function to handle Google login
   const handleGoogleLogin = () => {
     try {
-      // For production vs development environment
-      let googleAuthUrl;
+      // Luôn sử dụng URL backend đầy đủ cho OAuth
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || 'https://backend-6c5g.onrender.com';
+      const googleAuthUrl = `${backendUrl}/api/users/google`;
       
-      if (import.meta.env.PROD) {
-        // In production, use absolute URL for direct server-to-server OAuth
-        googleAuthUrl = '/api/users/google';
-        console.log('Using production Google auth URL:', googleAuthUrl);
-      } else {
-        // In development, use the VITE_API_URL from environment
-        const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
-        googleAuthUrl = `${apiBaseUrl}/users/google`;
-        console.log('Using development Google auth URL:', googleAuthUrl);
-      }
-      
-      // Log the navigation for debugging
+      console.log('Using backend Google auth URL:', googleAuthUrl);
       console.log('Navigating to Google OAuth URL:', googleAuthUrl);
       
       // Redirect to Google OAuth endpoint on our backend
