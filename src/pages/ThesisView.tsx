@@ -71,7 +71,6 @@ const ThesisView = () => {
   const [thesis, setThesis] = useState<ThesisDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-  const [isRechecking, setIsRechecking] = useState(false);
   const [showAllSources, setShowAllSources] = useState(false);
 
   // Danh sách các domain uy tín/nguồn gốc thường được ưu tiên
@@ -188,39 +187,6 @@ const ThesisView = () => {
       fetchThesisDetail();
     }
   }, [id, toast]);
-
-  const handleRecheckPlagiarism = async () => {
-    if (!thesis?._id) return;
-    
-    setIsRechecking(true);
-    try {
-      const { data } = await api.post(`/theses/${thesis._id}/recheck`);
-      
-      // Tính toán Similarity Index mới và cập nhật state
-      const processedData = calculateSimilarityIndex(data);
-      
-      // Xử lý thêm processedSources nếu cần
-      if (processedData.textMatches && processedData.textMatches.length > 0 && !processedData.processedSources) {
-        processedData.processedSources = processSourcesFromMatches(processedData.textMatches);
-      }
-      
-      setThesis(processedData);
-      
-      toast({
-        title: "Thành công",
-        description: "Đã kiểm tra lại đạo văn cho luận văn này",
-      });
-    } catch (error: any) {
-      console.error("Lỗi khi kiểm tra lại đạo văn:", error);
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: error.response?.data?.message || "Đã xảy ra lỗi khi kiểm tra lại đạo văn",
-      });
-    } finally {
-      setIsRechecking(false);
-    }
-  };
 
   const handleDownload = async (type: string) => {
     if (!thesis?._id) {
@@ -661,25 +627,13 @@ const ThesisView = () => {
             </div>
           </div>
           {(user?.isAdmin || thesis.author?._id === user?._id) && 
-            [
-              thesis.status !== "processing" && (
-                <Button 
-                  key="recheck-button"
-                  variant="outline" 
-                  onClick={handleRecheckPlagiarism}
-                  disabled={isRechecking}
-                >
-                  {isRechecking ? "Đang kiểm tra..." : "Kiểm tra lại đạo văn"}
-                </Button>
-              ),
-              <Button 
-                key="delete-button"
-                variant="destructive" 
-                onClick={handleDelete}
-              >
-                Xóa luận văn
-              </Button>
-            ]
+            <Button 
+              key="delete-button"
+              variant="destructive" 
+              onClick={handleDelete}
+            >
+              Xóa luận văn
+            </Button>
           }
         </div>
       </div>
@@ -1022,22 +976,6 @@ const ThesisView = () => {
                             </>
                           )}
                         </div>
-                        
-                        {thesis.status === "completed" && (user?.isAdmin || thesis.author?._id === user?._id) && (
-                          <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                            <p className="text-sm text-blue-700">
-                              Phát hiện đạo văn AI có thể không hoàn hảo. Nếu bạn muốn kiểm tra lại, hãy nhấn nút "Kiểm tra lại đạo văn".
-                            </p>
-                            <Button 
-                              variant="outline" 
-                              className="mt-2 bg-white"
-                              onClick={handleRecheckPlagiarism}
-                              disabled={isRechecking}
-                            >
-                              {isRechecking ? "Đang kiểm tra..." : "Kiểm tra lại đạo văn"}
-                            </Button>
-                          </div>
-                        )}
                       </div>
                     )}
                   </TabsContent>
