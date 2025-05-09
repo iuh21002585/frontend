@@ -12,7 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { FileText, Search, Filter, Clock, ExternalLink, AlertTriangle, CheckCircle, XCircle, RefreshCw, User, BookOpen } from "lucide-react";
 import {
   Card,
@@ -100,6 +100,9 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
       }
     }
 
+    // Sử dụng cleanup function khi unmount
+    let isMounted = true;
+
     setIsLoading(true);
     try {
       // Sử dụng tham số để kiểm soát việc sử dụng cache
@@ -114,35 +117,56 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
         return calculateSimilarityIndex(thesis);
       });
       
-      setTheses(processedData);
-      setDataFetched(true);
-      lastFetchTime.current = now;
-      
-      // Gọi callback nếu có
-      if (onThesesLoaded) {
-        onThesesLoaded(processedData);
+      // Chỉ cập nhật state nếu component vẫn mounted
+      if (isMounted) {
+        setTheses(processedData);
+        setDataFetched(true);
+        lastFetchTime.current = now;
+        
+        // Gọi callback nếu có
+        if (onThesesLoaded) {
+          onThesesLoaded(processedData);
+        }
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách luận văn:", error);
-      setTheses([]);
+      if (isMounted) {
+        setTheses([]);
+      }
     } finally {
-      setIsLoading(false);
-      // Gọi callback khi hoàn tất làm mới
-      if (onRefreshComplete) {
-        onRefreshComplete();
+      if (isMounted) {
+        setIsLoading(false);
+        // Gọi callback khi hoàn tất làm mới
+        if (onRefreshComplete) {
+          onRefreshComplete();
+        }
       }
     }
+
+    // Trả về cleanup function
+    return () => {
+      isMounted = false;
+    };
   };
 
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
     if (user) {
-      fetchTheses(false);
+      cleanup = fetchTheses(false);
     }
+    
+    // Cleanup khi unmount
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [user]);
 
   // Cập nhật khi nhận dữ liệu từ props
   useEffect(() => {
-    if (sharedTheses) {
+    let isMounted = true;
+    
+    if (sharedTheses && isMounted) {
       // Sử dụng utility function để tính toán
       const processedData = sharedTheses.map((thesis: Thesis) => {
         return calculateSimilarityIndex(thesis);
@@ -152,13 +176,23 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
       setDataFetched(true);
       setIsLoading(false);
     }
+    
+    return () => {
+      isMounted = false;
+    };
   }, [sharedTheses]);
 
   // Theo dõi prop shouldRefresh để làm mới khi cần
   useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    
     if (shouldRefresh && user) {
-      fetchTheses(true); // Force refresh khi shouldRefresh = true
+      cleanup = fetchTheses(true); // Force refresh khi shouldRefresh = true
     }
+    
+    return () => {
+      if (cleanup) cleanup();
+    };
   }, [shouldRefresh, user]);
 
   // Lọc và sắp xếp luận văn
@@ -358,130 +392,133 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
           Tìm thấy {filteredTheses.length} luận văn
         </div>
 
-        {/* Danh sách luận văn */}
-        <AnimatePresence>
-          <motion.div
-            variants={listVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 gap-4"
-          >
-            {filteredTheses.map((thesis) => (
-              <motion.div key={thesis._id} variants={itemVariants}>
-                <Card className="overflow-hidden transition-all hover:border-primary/50">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between">
-                      <CardTitle className="text-xl">
-                        <Link 
-                          to={`/thesis/${thesis._id}`} 
-                          className="hover:text-primary hover:underline transition-colors"
-                        >
-                          {thesis.title}
-                        </Link>
-                      </CardTitle>
-                      {getStatusBadge(thesis.status)}
-                    </div>
-                    <CardDescription className="flex items-center gap-1 mb-2">
-                      <Clock className="h-3 w-3" />
-                      {new Date(thesis.createdAt).toLocaleDateString('vi-VN', {
-                        year: 'numeric', 
-                        month: 'long', 
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })}
+        {/* Danh sách luận văn - Loại bỏ AnimatePresence để tránh xung đột DOM */}
+        <motion.div
+          variants={listVariants}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 gap-4"
+        >
+          {filteredTheses.map((thesis) => (
+            <motion.div 
+              key={thesis._id} 
+              variants={itemVariants}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Card className="overflow-hidden transition-all hover:border-primary/50">
+                <CardHeader className="pb-2">
+                  <div className="flex justify-between">
+                    <CardTitle className="text-xl">
+                      <Link 
+                        to={`/thesis/${thesis._id}`} 
+                        className="hover:text-primary hover:underline transition-colors"
+                      >
+                        {thesis.title}
+                      </Link>
+                    </CardTitle>
+                    {getStatusBadge(thesis.status)}
+                  </div>
+                  <CardDescription className="flex items-center gap-1 mb-2">
+                    <Clock className="h-3 w-3" />
+                    {new Date(thesis.createdAt).toLocaleDateString('vi-VN', {
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </CardDescription>
+                  {(thesis.user?.name || thesis.faculty || (thesis.processingTime !== undefined && thesis.status === "completed")) && (
+                    <CardDescription className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
+                      {thesis.user?.name && (
+                        <span className="flex items-center gap-1">
+                          <User className="h-3 w-3" />
+                          Tác giả: {thesis.user.name}
+                        </span>
+                      )}
+                      {thesis.faculty && (
+                        <span className="flex items-center gap-1">
+                          <BookOpen className="h-3 w-3" />
+                          Khoa: {thesis.faculty}
+                        </span>
+                      )}
+                      {thesis.processingTime !== undefined && (thesis.status === "completed" || thesis.status === "rejected") && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Thời gian xử lý: {thesis.processingTime < 60 
+                            ? `${thesis.processingTime} giây` 
+                            : `${Math.floor(thesis.processingTime / 60)} phút ${thesis.processingTime % 60} giây`}
+                        </span>
+                      )}
                     </CardDescription>
-                    {(thesis.user?.name || thesis.faculty || (thesis.processingTime !== undefined && thesis.status === "completed")) && (
-                      <CardDescription className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
-                        {thesis.user?.name && (
-                          <span className="flex items-center gap-1">
-                            <User className="h-3 w-3" />
-                            Tác giả: {thesis.user.name}
-                          </span>
-                        )}
-                        {thesis.faculty && (
-                          <span className="flex items-center gap-1">
-                            <BookOpen className="h-3 w-3" />
-                            Khoa: {thesis.faculty}
-                          </span>
-                        )}
-                        {thesis.processingTime !== undefined && (thesis.status === "completed" || thesis.status === "rejected") && (
-                          <span className="flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            Thời gian xử lý: {thesis.processingTime < 60 
-                              ? `${thesis.processingTime} giây` 
-                              : `${Math.floor(thesis.processingTime / 60)} phút ${thesis.processingTime % 60} giây`}
-                          </span>
-                        )}
-                      </CardDescription>
-                    )}
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {thesis.status === "completed" && (
-                        <div className="space-y-2">
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Đạo văn truyền thống:</span>
-                                <span className={`font-semibold ${
-                                  thesis.plagiarismScore < 20 ? 'text-green-600' : 
-                                  thesis.plagiarismScore < 40 ? 'text-yellow-600' : 
-                                  'text-red-600'
-                                }`}>
-                                  {thesis.plagiarismScore}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={thesis.plagiarismScore} 
-                                className={`h-2 ${
-                                  thesis.plagiarismScore < 20 ? 'bg-green-100' : 
-                                  thesis.plagiarismScore < 40 ? 'bg-yellow-100' : 
-                                  'bg-red-100'
-                                }`}
-                              />
+                  )}
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {thesis.status === "completed" && (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Đạo văn truyền thống:</span>
+                              <span className={`font-semibold ${
+                                thesis.plagiarismScore < 20 ? 'text-green-600' : 
+                                thesis.plagiarismScore < 40 ? 'text-yellow-600' : 
+                                'text-red-600'
+                              }`}>
+                                {thesis.plagiarismScore}%
+                              </span>
                             </div>
-                            <div className="space-y-2">
-                              <div className="flex justify-between text-sm">
-                                <span className="text-muted-foreground">Đạo văn AI:</span>
-                                <span className={`font-semibold ${
-                                  thesis.aiPlagiarismScore < 20 ? 'text-green-600' : 
-                                  thesis.aiPlagiarismScore < 40 ? 'text-yellow-600' : 
-                                  'text-red-600'
-                                }`}>
-                                  {thesis.aiPlagiarismScore}%
-                                </span>
-                              </div>
-                              <Progress 
-                                value={thesis.aiPlagiarismScore} 
-                                className={`h-2 ${
-                                  thesis.aiPlagiarismScore < 20 ? 'bg-green-100' : 
-                                  thesis.aiPlagiarismScore < 40 ? 'bg-yellow-100' : 
-                                  'bg-red-100'
-                                }`}
-                              />
+                            <Progress 
+                              value={thesis.plagiarismScore} 
+                              className={`h-2 ${
+                                thesis.plagiarismScore < 20 ? 'bg-green-100' : 
+                                thesis.plagiarismScore < 40 ? 'bg-yellow-100' : 
+                                'bg-red-100'
+                              }`}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">Đạo văn AI:</span>
+                              <span className={`font-semibold ${
+                                thesis.aiPlagiarismScore < 20 ? 'text-green-600' : 
+                                thesis.aiPlagiarismScore < 40 ? 'text-yellow-600' : 
+                                'text-red-600'
+                              }`}>
+                                {thesis.aiPlagiarismScore}%
+                              </span>
                             </div>
+                            <Progress 
+                              value={thesis.aiPlagiarismScore} 
+                              className={`h-2 ${
+                                thesis.aiPlagiarismScore < 20 ? 'bg-green-100' : 
+                                thesis.aiPlagiarismScore < 40 ? 'bg-yellow-100' : 
+                                'bg-red-100'
+                              }`}
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="flex justify-between border-t pt-4 pb-2">
-                    <div className="text-sm text-muted-foreground">
-                      ID: {thesis._id.substring(0, 8)}...
-                    </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to={`/thesis/${thesis._id}`}>
-                        <ExternalLink className="h-4 w-4 mr-1" />
-                        Chi tiết
-                      </Link>
-                    </Button>
-                  </CardFooter>
-                </Card>
-              </motion.div>
-            ))}
-          </motion.div>
-        </AnimatePresence>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+                <CardFooter className="flex justify-between border-t pt-4 pb-2">
+                  <div className="text-sm text-muted-foreground">
+                    ID: {thesis._id.substring(0, 8)}...
+                  </div>
+                  <Button variant="outline" size="sm" asChild>
+                    <Link to={`/thesis/${thesis._id}`}>
+                      <ExternalLink className="h-4 w-4 mr-1" />
+                      Chi tiết
+                    </Link>
+                  </Button>
+                </CardFooter>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     );
   }
