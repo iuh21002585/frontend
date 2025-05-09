@@ -344,35 +344,7 @@ const About = () => {
           </CardContent>
         </Card>
         
-        <Card className="md:col-span-2">
-          <CardHeader>
-            <CardTitle>Đội ngũ phát triển</CardTitle>
-            <CardDescription>Những người đứng sau IUH_PLAGCHECK</CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-800">NV</span>
-              </div>
-              <h3 className="font-medium">Bùi Đức Hải</h3>
-              <p className="text-sm text-gray-500">Trưởng nhóm phát triển</p>
-            </div>
-            <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-800">TT</span>
-              </div>
-              <h3 className="font-medium">Lê Trung Hân</h3>
-              <p className="text-sm text-gray-500">Chuyên gia NLP</p>
-            </div>
-            {/* <div className="flex flex-col items-center space-y-2 text-center">
-              <div className="h-20 w-20 rounded-full bg-gray-100 flex items-center justify-center">
-                <span className="text-2xl font-bold text-gray-800">LV</span>
-              </div>
-              <h3 className="font-medium">Lê Văn C</h3>
-              <p className="text-sm text-gray-500">Kỹ sư AI</p>
-            </div> */}
-          </CardContent>
-        </Card>
+        
         
         <Card>
           <CardHeader>
