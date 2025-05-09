@@ -9,6 +9,7 @@ import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminDashboard from "./pages/AdminDashboard";
 import SeedData from "./pages/SeedData";
+import BackendStatusAlert from "./components/BackendStatusAlert";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +19,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <div className="min-h-screen bg-background">
+            <BackendStatusAlert />
             <Navbar />
             <main className="container mx-auto py-6 px-4">
               <Routes>

@@ -16,12 +16,19 @@ const API_URL = getApiBaseUrl();
 
 console.log('API URL configured as:', API_URL);
 
+// Track backend connectivity status
+let isBackendDown = false;
+let lastBackendCheckTime = 0;
+const backendCheckInterval = 30000; // 30 seconds
+
 // Tạo instance của axios với base URL
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout to avoid hanging requests
+  timeout: 30000, // 30 seconds
 });
 
 // Cache lưu trữ dữ liệu API
@@ -71,6 +78,11 @@ const apiCache = {
 // Thêm interceptor để tự động thêm token vào header
 api.interceptors.request.use(
   (config) => {
+    // If backend was detected as down, check if it's time to try again
+    if (isBackendDown && Date.now() - lastBackendCheckTime > backendCheckInterval) {
+      isBackendDown = false;
+    }
+
     // Log với mức độ thấp hơn (verbose)
     if (process.env.NODE_ENV !== 'production') {
       console.log('API Request URL:', `${config.baseURL}${config.url}`);
@@ -86,6 +98,46 @@ api.interceptors.request.use(
     return config;
   },
   (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor to handle common errors
+api.interceptors.response.use(
+  (response) => {
+    // Reset backend down status on successful response
+    if (isBackendDown) {
+      isBackendDown = false;
+      console.log('Backend connection restored');
+    }
+    return response;
+  },
+  (error) => {
+    // Handle specific error codes
+    if (error.code === 'ECONNABORTED') {
+      console.error('Request timeout. The server took too long to respond.');
+    }
+
+    if (axios.isAxiosError(error)) {
+      if (error.response) {
+        // Server responded with an error status code
+        if (error.response.status === 502) {
+          console.error('Backend server unavailable (502 Bad Gateway)');
+          isBackendDown = true;
+          lastBackendCheckTime = Date.now();
+          // You might want to notify the user that the backend is down
+        } else if (error.response.status === 504) {
+          console.error('Gateway timeout (504). The server took too long to respond.');
+          // Similar to 502, might indicate backend issues
+        }
+      } else if (error.request) {
+        // Request was made but no response received
+        console.error('No response received from the backend server');
+        isBackendDown = true;
+        lastBackendCheckTime = Date.now();
+      }
+    }
+    
     return Promise.reject(error);
   }
 );
@@ -144,6 +196,27 @@ const apiWithCache = {
     } else {
       // Xóa toàn bộ cache
       apiCache.clear();
+    }
+  },
+
+  // Add a healthCheck method to check backend status
+  async healthCheck() {
+    try {
+      if (isBackendDown && Date.now() - lastBackendCheckTime <= backendCheckInterval) {
+        return { status: 'down', message: 'Backend is currently unavailable' };
+      }
+      
+      const response = await api.get('/health', { timeout: 5000 });
+      isBackendDown = false;
+      return { status: 'up', data: response.data };
+    } catch (error) {
+      isBackendDown = true;
+      lastBackendCheckTime = Date.now();
+      return { 
+        status: 'down', 
+        message: 'Backend is currently unavailable', 
+        error: axios.isAxiosError(error) ? error.message : 'Unknown error' 
+      };
     }
   }
 };
