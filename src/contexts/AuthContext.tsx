@@ -43,16 +43,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Kiểm tra người dùng đã đăng nhập từ localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
+    // Error handling for localStorage access
+    const loadUserFromStorage = () => {
       try {
-        setUser(JSON.parse(storedUser));
+        // Kiểm tra người dùng đã đăng nhập từ localStorage
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            // Validate essential user properties
+            if (parsedUser && 
+                typeof parsedUser === 'object' && 
+                parsedUser._id && 
+                parsedUser.email && 
+                parsedUser.name) {
+              setUser(parsedUser);
+              // Set the Authorization header if token exists
+              if (parsedUser.token) {
+                api.defaults.headers.common['Authorization'] = `Bearer ${parsedUser.token}`;
+              }
+            } else {
+              // If user data is invalid, clear it
+              console.warn("Invalid user data in localStorage, clearing...");
+              localStorage.removeItem("user");
+            }
+          } catch (error) {
+            console.error("Failed to parse user from localStorage:", error);
+            // Clear corrupted data
+            localStorage.removeItem("user");
+          }
+        }
       } catch (error) {
-        console.error("Failed to parse user from localStorage:", error);
+        console.error("Error accessing localStorage:", error);
+        // If localStorage access fails completely (e.g. in some privacy modes)
+        // we just continue without user data
+      } finally {
+        setLoading(false);
       }
-    }
-    setLoading(false);
+    };
+
+    loadUserFromStorage();
   }, []);
 
   const login = async (email: string, password: string) => {
@@ -436,7 +466,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("user");
+    try {
+      localStorage.removeItem("user");
+      // Clear Authorization header
+      api.defaults.headers.common['Authorization'] = '';
+    } catch (error) {
+      console.error("Error during logout:", error);
+    }
+    
     toast({
       title: "Đăng xuất thành công",
       description: "Hẹn gặp lại bạn!",
