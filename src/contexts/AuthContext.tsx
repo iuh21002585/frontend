@@ -268,25 +268,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       setLoading(true);
       
+      // Validate inputs first
+      if (!token || typeof token !== 'string') {
+        throw new Error('Invalid authentication token received');
+      }
+      
+      if (!userId || typeof userId !== 'string') {
+        throw new Error('Invalid user ID received');
+      }
+      
+      console.log(`Processing Google auth with userId: ${userId}`);
+      
       // Token từ Google Auth được truyền từ URL callback
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       
       // Lấy thông tin user từ API sử dụng route mới /me/:id
-      const { data } = await api.get(`/users/me/${userId}`);
+      const response = await api.get(`/users/me/${userId}`);
+      
+      // Validate response data
+      if (!response || !response.data) {
+        throw new Error('No user data received from server');
+      }
       
       const userData = {
-        _id: data._id,
-        id: data._id,
-        email: data.email,
-        name: data.name,
-        university: data.university || '',
-        faculty: data.faculty || '',
-        isAdmin: data.isAdmin,
+        _id: response.data._id || userId, // Fallback to userId if _id is missing
+        id: response.data._id || userId,   // Fallback to userId if _id is missing
+        email: response.data.email || '',
+        name: response.data.name || 'User',
+        university: response.data.university || '',
+        faculty: response.data.faculty || '',
+        isAdmin: !!response.data.isAdmin,
         token: token,
-        profilePicture: data.profilePicture,
+        profilePicture: response.data.profilePicture || '',
         isEmailVerified: true, // Tài khoản Google đã xác minh email
-        googleId: data.googleId
+        googleId: response.data.googleId || ''
       };
+      
+      console.log('Google auth successful, setting user data');
       
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
@@ -296,10 +314,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Chào mừng quay trở lại!",
       });
     } catch (error: any) {
+      console.error('Google auth error:', error);
+      
+      // Clear any partial auth state that might be causing issues
+      api.defaults.headers.common['Authorization'] = '';
+      
       toast({
         variant: "destructive",
         title: "Đăng nhập Google thất bại",
-        description: error.response?.data?.message || "Đã xảy ra lỗi khi đăng nhập bằng Google",
+        description: error.response?.data?.message || error.message || "Đã xảy ra lỗi khi đăng nhập bằng Google",
       });
       throw error;
     } finally {
