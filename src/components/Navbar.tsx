@@ -303,7 +303,7 @@ const Navbar = () => {
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-                <div className="hidden md:flex items-center">
+                {/* <div className="hidden md:flex items-center">
                   {user.isAdmin && location.pathname !== "/admin" && (
                     <Button asChild variant="default" size="sm" className="ml-2">
                       <Link to="/admin">
@@ -318,7 +318,7 @@ const Navbar = () => {
                       </Link>
                     </Button>
                   )}
-                </div>
+                </div> */}
               </>
             ) : (
               <>
