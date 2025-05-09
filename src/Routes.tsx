@@ -10,6 +10,8 @@ import Profile from "./pages/Profile";
 import About from "./pages/About";
 import AuthSuccess from "./pages/AuthSuccess";
 import VerifyEmail from "./pages/VerifyEmail";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/AdminRoute";
 import HomeRedirect from "./components/HomeRedirect";
@@ -27,6 +29,8 @@ const AppRoutes = () => {
       <Route path="/about" element={<About />} />
       <Route path="/auth-success" element={<AuthSuccess />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route 
         path="/dashboard" 
         element={
