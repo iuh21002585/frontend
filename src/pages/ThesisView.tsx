@@ -737,7 +737,7 @@ const ThesisView = () => {
                           </div>
                         </div>
 
-                        {/* Danh sách các đoạn văn bản trùng lặp */}
+                        {/* Danh sách các đoạn văn bản trùng lặp
                         <div>
                           <h3 className="text-lg font-medium mb-4">Chi tiết đoạn văn bản trùng lặp</h3>
                           <div className="space-y-6">
@@ -791,7 +791,7 @@ const ThesisView = () => {
                               </div>
                             ))}
                           </div>
-                        </div>
+                        </div> */}
 
                         {/* Danh sách các nguồn trùng lặp */}
                         <div>
