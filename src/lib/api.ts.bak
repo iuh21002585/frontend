@@ -1,5 +1,15 @@
 import axios from 'axios';
 
+// Define custom error type extensions
+declare module 'axios' {
+  interface AxiosError {
+    isTimeout?: boolean;
+    timeoutMessage?: string;
+    isBackendDown?: boolean;
+    backendErrorMessage?: string;
+  }
+}
+
 // Determine the API base URL based on environment
 const getApiBaseUrl = () => {
   // Kiểm tra xem ứng dụng có đang chạy trên render.com không
@@ -134,10 +144,8 @@ api.interceptors.response.use(
       console.error('Request timeout. The server took too long to respond:', error.config?.url);
       
       // Add timeout message to the error object for better error handling in components
-      Object.assign(error, {
-        isTimeout: true,
-        timeoutMessage: 'Kết nối đến máy chủ đã quá thời gian chờ. Vui lòng thử lại sau.'
-      });
+      error.isTimeout = true;
+      error.timeoutMessage = 'Kết nối đến máy chủ đã quá thời gian chờ. Vui lòng thử lại sau.';
       
       // If it's a notification API call or theses API, mark the backend as temporarily down
       // to allow the application to use local fallbacks
@@ -170,29 +178,20 @@ api.interceptors.response.use(
           isBackendDown = true;
           lastBackendCheckTime = Date.now();
           
-          // Add custom properties to error object
-          Object.assign(error, {
-            isBackendDown: true,
-            backendErrorMessage: 'Máy chủ tạm thời không khả dụng (502).'
-          });
+          error.isBackendDown = true;
+          error.backendErrorMessage = 'Máy chủ tạm thời không khả dụng (502).';
         } else if (error.response.status === 504) {
           console.error('Gateway timeout (504). The server took too long to respond.');
           isBackendDown = true;
           lastBackendCheckTime = Date.now();
           
-          // Add custom properties to error object
-          Object.assign(error, {
-            isTimeout: true,
-            timeoutMessage: 'Máy chủ phản hồi quá chậm (504).'
-          });
+          error.isTimeout = true;
+          error.timeoutMessage = 'Máy chủ phản hồi quá chậm (504).';
         } else if (error.response.status === 408) {
           console.error('Request timeout (408).');
           
-          // Add custom properties to error object
-          Object.assign(error, {
-            isTimeout: true,
-            timeoutMessage: 'Yêu cầu đã hết thời gian chờ (408).'
-          });
+          error.isTimeout = true;
+          error.timeoutMessage = 'Yêu cầu đã hết thời gian chờ (408).';
         }
       } else if (error.request) {
         // Request was made but no response received
@@ -200,11 +199,8 @@ api.interceptors.response.use(
         isBackendDown = true;
         lastBackendCheckTime = Date.now();
         
-        // Add custom properties to error object
-        Object.assign(error, {
-            isBackendDown: true,
-            backendErrorMessage: 'Không nhận được phản hồi từ máy chủ.'
-        });
+        error.isBackendDown = true;
+        error.backendErrorMessage = 'Không nhận được phản hồi từ máy chủ.';
       }
     }
     
@@ -217,7 +213,7 @@ const apiWithCache = {
   ...api,
   
   // Override phương thức GET với hỗ trợ cache
-  async get(url: string, config: any = {}) {
+  async get(url, config = {}) {
     // Kiểm tra xem có bỏ qua cache không
     const skipCache = config?.params?._skipCache || false;
     

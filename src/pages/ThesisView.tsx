@@ -15,6 +15,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import api from "@/lib/api";
 import { calculateSimilarityIndex } from "@/utils/similarityCalculator";
+import { formatDistanceToNow } from 'date-fns';
+import { vi } from 'date-fns/locale';
 
 interface PlagiarismDetail {
   originalText: string;
@@ -52,7 +54,7 @@ interface ThesisDetail {
   };
   faculty: string;
   createdAt: string;
-  status: "processing" | "completed" | "rejected";
+  status: "pending" | "queued" | "processing" | "completed" | "rejected" | "error";
   plagiarismScore: number;
   aiPlagiarismScore: number;
   plagiarismDetails: PlagiarismDetail[];
@@ -62,6 +64,10 @@ interface ThesisDetail {
   extractionError?: boolean;
   processedSources?: any[];
   aiPlagiarismDetails?: any[];
+  estimatedCompletionTime?: string;
+  completedAt?: string;
+  errorMessage?: string;
+  estimatedCompletionTime?: string;
 }
 
 const ThesisView = () => {
@@ -72,6 +78,7 @@ const ThesisView = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
   const [showAllSources, setShowAllSources] = useState(false);
+  const [contentLoaded, setContentLoaded] = useState(false);
 
   // Danh sách các domain uy tín/nguồn gốc thường được ưu tiên
   const priorityDomains = [
@@ -155,6 +162,94 @@ const ThesisView = () => {
     return cleanedText;
   };
   
+  // State để theo dõi trạng thái đang tải của từng tab
+  const [tabLoading, setTabLoading] = useState<Record<string, boolean>>({
+    overview: false,
+    plagiarism: false,
+    content: false
+  });
+
+  // Function to handle tab changes - cải tiến để load mượt mà hơn
+  const handleTabChange = (value: string) => {
+    // Luôn cập nhật tab trước để UI phản hồi ngay lập tức
+    setActiveTab(value);
+    
+    // Nếu chuyển đến tab content mà nội dung chưa được tải
+    if (value === "content" && !contentLoaded && thesis) {
+      // Đánh dấu là đang tải tab này
+      setTabLoading(prev => ({ ...prev, content: true }));
+      
+      // Tải nội dung tab
+      refreshThesisContent();
+    }
+    
+    // Nếu cần load thêm dữ liệu đặc biệt cho tab khác, xử lý tại đây
+    if (value === "plagiarism" && thesis?.status === "completed" && 
+        (!thesis.textMatches || thesis.textMatches.length === 0)) {
+      setTabLoading(prev => ({ ...prev, plagiarism: true }));
+      refreshThesisPlagiarismData();
+    }
+  };
+  
+  // Function để tải lại dữ liệu đạo văn
+  const refreshThesisPlagiarismData = async () => {
+    if (!id) return;
+    
+    try {
+      const { data } = await api.get(`/theses/${id}`);
+      
+      // Tính toán Similarity Index
+      const processedData = calculateSimilarityIndex(data);
+      
+      // Xử lý thêm processedSources
+      if (processedData.textMatches && processedData.textMatches.length > 0 && !processedData.processedSources) {
+        processedData.processedSources = processSourcesFromMatches(processedData.textMatches);
+      }
+      
+      setThesis(processedData);
+    } catch (error: any) {
+      console.error("Lỗi khi làm mới dữ liệu đạo văn:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi tải dữ liệu",
+        description: "Không thể tải dữ liệu đạo văn. Vui lòng thử lại sau."
+      });
+    } finally {
+      setTabLoading(prev => ({ ...prev, plagiarism: false }));
+    }
+  };
+  
+  // Function to refresh thesis content with loading state
+  const refreshThesisContent = async () => {
+    if (!id) return;
+    
+    try {
+      setTabLoading(prev => ({ ...prev, content: true }));
+      
+      const { data } = await api.get(`/theses/${id}`);
+      
+      // Tính toán Similarity Index
+      const processedData = calculateSimilarityIndex(data);
+      
+      // Xử lý thêm processedSources nếu cần
+      if (processedData.textMatches && processedData.textMatches.length > 0 && !processedData.processedSources) {
+        processedData.processedSources = processSourcesFromMatches(processedData.textMatches);
+      }
+      
+      setThesis(processedData);
+      setContentLoaded(true);
+    } catch (error: any) {
+      console.error("Lỗi khi làm mới nội dung luận văn:", error);
+      toast({
+        variant: "destructive",
+        title: "Lỗi làm mới nội dung",
+        description: error.response?.data?.message || "Đã xảy ra lỗi khi tải lại nội dung luận văn",
+      });
+    } finally {
+      setTabLoading(prev => ({ ...prev, content: false }));
+    }
+  };
+
   useEffect(() => {
     // Lấy chi tiết luận văn từ API
     const fetchThesisDetail = async () => {
@@ -171,6 +266,10 @@ const ThesisView = () => {
         }
         
         setThesis(processedData);
+        // Mark content as loaded if it exists
+        if (processedData.content) {
+          setContentLoaded(true);
+        }
       } catch (error: any) {
         console.error("Lỗi khi lấy chi tiết luận văn:", error);
         toast({
@@ -584,10 +683,33 @@ const ThesisView = () => {
             </p>
           </div>
           <div className="mt-2">
+            {thesis.status === "queued" && (
+              <div className="space-y-2">
+                <Badge variant="outline" className="bg-blue-50 text-blue-800 border-blue-200">
+                  Đang chờ xử lý
+                </Badge>
+                {thesis.estimatedCompletionTime && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <p>Dự kiến hoàn thành: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p>
+                    <p className="text-xs mt-1">Bạn sẽ nhận được email thông báo khi hoàn tất</p>
+                    <Progress value={5} className="h-2 mt-2" />
+                  </div>
+                )}
+              </div>
+            )}
             {thesis.status === "processing" && (
-              <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                Đang xử lý
-              </Badge>
+              <div className="space-y-2">
+                <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                  Đang xử lý
+                </Badge>
+                {thesis.estimatedCompletionTime && (
+                  <div className="text-sm text-muted-foreground mt-1">
+                    <p>Dự kiến hoàn thành: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p>
+                    <p className="text-xs mt-1">Bạn sẽ nhận được email thông báo khi hoàn tất</p>
+                    <Progress value={30} className="h-2 mt-2" />
+                  </div>
+                )}
+              </div>
             )}
             {thesis.status === "completed" && (
               <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">
@@ -638,11 +760,20 @@ const ThesisView = () => {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" onValueChange={setActiveTab}>
+      <Tabs defaultValue="overview" onValueChange={handleTabChange}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="overview">Tổng quan</TabsTrigger>
-          <TabsTrigger value="plagiarism">Báo cáo đạo văn</TabsTrigger>
-          <TabsTrigger value="content">Nội dung</TabsTrigger>
+          <TabsTrigger value="overview" disabled={tabLoading.overview}>
+            Tổng quan
+            {tabLoading.overview && <span className="ml-2 animate-spin">⟳</span>}
+          </TabsTrigger>
+          <TabsTrigger value="plagiarism" disabled={tabLoading.plagiarism}>
+            Báo cáo đạo văn
+            {tabLoading.plagiarism && <span className="ml-2 animate-spin">⟳</span>}
+          </TabsTrigger>
+          <TabsTrigger value="content" disabled={tabLoading.content}>
+            Nội dung
+            {tabLoading.content && <span className="ml-2 animate-spin">⟳</span>}
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview" className="mt-6">
@@ -687,15 +818,47 @@ const ThesisView = () => {
         <TabsContent value="plagiarism" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Chi tiết đạo văn</CardTitle>
-              <CardDescription>
-                Danh sách các đoạn văn bản được phát hiện có nội dung trùng lặp
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Chi tiết đạo văn</CardTitle>
+                  <CardDescription>
+                    Danh sách các đoạn văn bản được phát hiện có nội dung trùng lặp
+                  </CardDescription>
+                </div>
+                {tabLoading.plagiarism && (
+                  <div className="flex items-center gap-2 text-blue-600">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-sm font-medium">Đang tải báo cáo...</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              {thesis.status === "processing" ? (
-                <div className="text-center py-6">
-                  <p className="text-muted-foreground">Đang phân tích và kiểm tra đạo văn...</p>
+              {tabLoading.plagiarism ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <div className="w-12 h-12 border-4 border-t-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-muted-foreground">Đang tải dữ liệu báo cáo đạo văn...</p>
+                </div>
+              ) : thesis.status === "processing" ? (
+                <div className="text-center py-10 space-y-4">
+                  <div className="relative w-20 h-20 mx-auto">
+                    <svg className="animate-spin h-20 w-20 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-bold">
+                        {thesis.status === 'processing' ? 'Đang xử lý' : 'Đang chờ'}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-lg font-medium">Kiểm tra đạo văn đang được tiến hành...</p>
+                  <div className="text-muted-foreground max-w-md mx-auto">
+                    <p>Luận văn của bạn đang được kiểm tra đạo văn. Quá trình này có thể mất từ vài phút đến vài giờ tùy thuộc vào độ dài của tài liệu.</p>
+                    <p className="mt-2 text-sm text-blue-600">
+                      Bạn sẽ nhận được email thông báo khi quá trình kiểm tra hoàn tất.
+                    </p>
+                  </div>
                 </div>
               ) : (
                 <Tabs defaultValue="traditional" className="w-full">
@@ -988,13 +1151,37 @@ const ThesisView = () => {
         <TabsContent value="content" className="mt-6">
           <Card>
             <CardHeader>
-              <CardTitle>Nội dung luận văn</CardTitle>
-              <CardDescription>
-                Nội dung đầy đủ của luận văn với các đoạn đạo văn được đánh dấu
-              </CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Nội dung luận văn</CardTitle>
+                  <CardDescription>
+                    Nội dung đầy đủ của luận văn với các đoạn đạo văn được đánh dấu
+                  </CardDescription>
+                </div>
+                {!contentLoaded && !tabLoading.content && (
+                  <Button 
+                    variant="outline" 
+                    onClick={refreshThesisContent} 
+                    className="flex items-center gap-2"
+                  >
+                    <RefreshCw className="h-4 w-4" /> Tải nội dung
+                  </Button>
+                )}
+                {tabLoading.content && (
+                  <div className="flex items-center text-muted-foreground gap-2">
+                    <RefreshCw className="h-4 w-4 animate-spin" />
+                    <span>Đang tải...</span>
+                  </div>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              {thesis.content ? (
+              {tabLoading.content ? (
+                <div className="flex flex-col items-center justify-center py-12 space-y-4">
+                  <div className="w-12 h-12 border-4 border-t-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className="text-muted-foreground">Đang tải nội dung luận văn...</p>
+                </div>
+              ) : thesis.content ? (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="w-4 h-4 bg-red-100 border border-red-300"></div>
@@ -1008,8 +1195,26 @@ const ThesisView = () => {
                   </div>
                 </div>
               ) : (
-                <div className="text-center py-6">
+                <div className="text-center py-10 space-y-4">
+                  <svg xmlns="http://www.w3.org/2000/svg" 
+                       className="h-16 w-16 mx-auto text-muted-foreground" 
+                       fill="none" 
+                       viewBox="0 0 24 24" 
+                       stroke="currentColor">
+                    <path strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={1} 
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
                   <p className="text-muted-foreground">Không tìm thấy nội dung luận văn.</p>
+                  
+                  <Button 
+                    variant="outline" 
+                    onClick={refreshThesisContent} 
+                    className="flex items-center gap-2 mx-auto"
+                  >
+                    <RefreshCw className="h-4 w-4" /> Tải nội dung
+                  </Button>
                 </div>
               )}
             </CardContent>

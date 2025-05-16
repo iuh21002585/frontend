@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -73,6 +74,18 @@ interface FileInfo {
   progress: number;
   status: 'waiting' | 'uploading' | 'success' | 'error';
   errorMessage?: string;
+  thesisId?: string;
+  estimatedTime?: string;
+}
+
+interface UploadResponse {
+  success: boolean;
+  message: string;
+  _id: string;
+  title: string;
+  fileName: string;
+  status: string;
+  estimatedCompletionTime?: string;
 }
 
 interface UploadThesisProps {
@@ -148,32 +161,105 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
           formData.append('checkTraditionalPlagiarism', values.checkTraditionalPlagiarism.toString());
           
           // Gọi API tải lên luận văn với theo dõi tiến trình
-          await api.post('/theses/upload', formData, {
-            headers: {
-              'Content-Type': 'multipart/form-data',
-            },
-            onUploadProgress: (progressEvent) => {
-              if (progressEvent.total) {
-                const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-                setFiles(prev => 
-                  prev.map((fileInfo, idx) => 
-                    idx === i 
-                      ? { ...fileInfo, progress: percentCompleted }
-                      : fileInfo
-                  )
-                );
+          // Sử dụng axios trực tiếp cho request
+          const axios = await import('axios');
+          const response = await axios.default.post(
+            `${api.defaults.baseURL}/theses/upload`,
+            formData,
+            {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+                // Thêm token xác thực nếu có
+                ...(localStorage.getItem('user') ? {
+                  'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user') || '{}').token}`
+                } : {})
+              },
+              onUploadProgress: (progressEvent) => {
+                if (progressEvent.total) {
+                  const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+                  setFiles(prev => 
+                    prev.map((fileInfo, idx) => 
+                      idx === i 
+                        ? { ...fileInfo, progress: percentCompleted }
+                        : fileInfo
+                    )
+                  );
+                }
               }
             }
-          });
+          );
           
-          // Cập nhật trạng thái thành công cho file
+          const responseData = response.data as UploadResponse;
+          
+          // Cập nhật trạng thái thành công cho file với thông tin bổ sung
           setFiles(prev => 
             prev.map((fileInfo, idx) => 
               idx === i 
-                ? { ...fileInfo, progress: 100, status: 'success' }
+                ? { 
+                    ...fileInfo, 
+                    progress: 100, 
+                    status: 'success',
+                    thesisId: responseData._id,
+                    estimatedTime: responseData.estimatedCompletionTime
+                  }
                 : fileInfo
             )
           );
+          
+          // Tạo thông báo khi tải lên thành công
+          try {
+            if (responseData._id && responseData.estimatedCompletionTime) {
+              // Tạo thông tin thông báo
+              const notificationData = {
+                title: 'Tải lên thành công',
+                message: `Luận văn "${responseData.title}" đã được tải lên thành công và đang được xử lý. Dự kiến hoàn thành vào ${new Date(responseData.estimatedCompletionTime).toLocaleString('vi-VN')}.`,
+                type: 'success',
+                link: `/thesis/${responseData._id}`, // Link đến trang chi tiết luận văn
+                linkText: 'Xem luận văn', // Tùy chỉnh text cho link thay vì mặc định "Xem chi tiết"
+              };
+              
+              // Thêm timeout ngắn hơn cho request tạo thông báo để tránh chờ đợi quá lâu
+              await Promise.race([
+                axios.default.post(
+                  `${api.defaults.baseURL}/notifications`,
+                  notificationData,
+                  {
+                    headers: {
+                      // Thêm token xác thực nếu có
+                      ...(localStorage.getItem('user') ? {
+                        'Authorization': `Bearer ${JSON.parse(localStorage.getItem('user') || '{}').token}`
+                      } : {})
+                    },
+                    timeout: 5000 // Timeout ngắn hơn (5 giây) để tránh chờ đợi quá lâu
+                  }
+                ),
+                new Promise((_, reject) => {
+                  setTimeout(() => {
+                    reject(new Error('Notification request timeout'));
+                  }, 5000);
+                })
+              ]).catch(e => {
+                console.warn("API thông báo không phản hồi, nhưng quá trình tải lên vẫn thành công:", e);
+                
+                // Lưu thông báo trong localStorage để hiển thị khi kết nối lại được
+                try {
+                  const pendingNotifications = JSON.parse(localStorage.getItem('pendingNotifications') || '[]');
+                  pendingNotifications.push({
+                    ...notificationData,
+                    createdAt: new Date().toISOString(),
+                    _id: `local-${Date.now()}`
+                  });
+                  localStorage.setItem('pendingNotifications', JSON.stringify(pendingNotifications));
+                  console.log("Đã lưu thông báo vào localStorage để xử lý sau");
+                } catch (localStorageError) {
+                  console.error("Không thể lưu thông báo vào localStorage:", localStorageError);
+                }
+              });
+            }
+          } catch (notifError) {
+            // Lỗi tạo thông báo không ảnh hưởng đến quá trình tải lên
+            console.error("Lỗi khi tạo thông báo:", notifError);
+          }
         } catch (error: any) {
           // Cập nhật trạng thái lỗi cho file
           setFiles(prev => 
@@ -194,9 +280,59 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
       const successCount = files.filter(f => f.status === 'success').length;
       
       if (successCount > 0) {
+        const successFiles = files.filter(f => f.status === 'success');
+        const firstEstimatedTime = successFiles.length > 0 && successFiles[0].estimatedTime
+          ? new Date(successFiles[0].estimatedTime).toLocaleString('vi-VN')
+          : 'trong thời gian sắp tới';
+        
         toast({
-          title: "Tải lên thành công",
-          description: `${successCount}/${files.length} luận văn đã được tải lên thành công và đang được kiểm tra.`,
+          variant: "default",
+          title: "🎉 Tải lên thành công",
+          description: (
+            <div className="space-y-3">
+              <p className="font-medium text-green-700 text-base">
+                {successCount}/{files.length} luận văn đã được tải lên thành công và đang được xử lý.
+              </p>
+              <div className="pt-2 border-t border-green-200">
+                <div className="mt-2 bg-green-50 p-3 rounded-md border border-green-200">
+                  <p className="flex items-center text-sm font-medium text-green-800 mb-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Thời gian xử lý:
+                  </p>
+                  <p className="ml-6 text-sm text-green-700">
+                    Dự kiến hoàn thành: <span className="font-medium">{firstEstimatedTime}</span>
+                  </p>
+                </div>
+                
+                <div className="mt-2 bg-blue-50 p-3 rounded-md border border-blue-200">
+                  <div className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-1.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                    <p className="text-sm text-blue-700">
+                      Bạn sẽ nhận được email thông báo tại <span className="font-medium">{user?.email}</span> khi quá trình kiểm tra hoàn tất.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex justify-center">
+                  <Link 
+                    to={successFiles.length > 0 ? `/thesis/${successFiles[0].thesisId}` : '/dashboard'}
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-5 py-2.5 text-sm font-medium text-white shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    Kiểm tra kết quả
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ),
+          className: "border-green-300 bg-green-50",
+          duration: 8000, // Hiển thị lâu hơn (8 giây)
         });
         
         // Gọi callback để thông báo đã tải lên thành công
@@ -318,6 +454,20 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
     }
     
     return `${nameWithoutExt.substring(0, maxLength - 3 - ext.length)}...${ext ? `.${ext}` : ''}`;
+  };
+  
+  // Helper function để hiển thị kích thước file theo định dạng dễ đọc
+  const formatFileSize = (bytes: number): string => {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+    
+    // Tính toán đơn vị phù hợp (Bytes, KB, MB, GB...)
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    // Làm tròn đến 2 chữ số thập phân và trả về chuỗi định dạng
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
   // Animation variants
@@ -463,33 +613,108 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
                       <div className="flex flex-col items-center gap-2">
                         <FileText className="h-12 w-12 text-primary" />
                         <p className="font-medium">{files.length} file đã được chọn</p>
-                        <ul className="list-none p-0 m-0">
+                        <ul className="list-none p-0 m-0 w-full max-w-md">
                           {files.map((file, index) => (
-                            <li key={index} className="flex items-center gap-2 mb-2">
-                              <Badge variant="default" className="text-xs">
-                                {getShortFileName(file.file.name)}
-                              </Badge>
-                              {file.status === 'uploading' ? (
-                                <Progress value={file.progress} className="h-2 w-20" />
-                              ) : file.status === 'success' ? (
-                                <Info className="h-4 w-4 text-green-500" />
-                              ) : file.status === 'error' ? (
-                                <AlertTriangle className="h-4 w-4 text-red-500" />
-                              ) : (
-                                <></>
-                              )}
-                              <X className="h-4 w-4 text-red-500 cursor-pointer" onClick={() => removeFile(index)} />
+                            <li key={index} className={`flex items-center justify-between p-3 mb-3 rounded-lg shadow-sm ${
+                              file.status === 'success' 
+                                ? 'bg-green-50 border border-green-200' 
+                                : file.status === 'error'
+                                ? 'bg-red-50 border border-red-200'
+                                : 'border'
+                            }`}>
+                              <div className="flex-grow">
+                                <div className="flex items-center gap-2">
+                                  <FileText className={`h-5 w-5 ${
+                                    file.status === 'success' ? 'text-green-600' : 'text-blue-600'
+                                  }`} />
+                                  <span className="font-medium">
+                                    {getShortFileName(file.file.name)}
+                                  </span>
+                                  {file.status === 'success' && (
+                                    <Badge variant="outline" className="bg-green-100 text-green-800 ml-2">
+                                      Thành công
+                                    </Badge>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1">
+                                  {formatFileSize(file.file.size)} • {SUPPORTED_FILE_TYPES[file.file.type] || getFileExtension(file.file.name)}
+                                  
+                                  {file.status === 'success' && file.estimatedTime && (
+                                    <span className="ml-1 text-green-600">
+                                      • Dự kiến hoàn thành: {new Date(file.estimatedTime).toLocaleTimeString('vi-VN')}
+                                    </span>
+                                  )}
+                                </div>
+                                {file.status === 'error' && (
+                                  <div className="text-xs text-red-500 mt-1 bg-red-50 p-1 rounded">
+                                    <AlertTriangle className="h-3 w-3 inline mr-1" />
+                                    {file.errorMessage}
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex items-center gap-2">
+                                {file.status === 'uploading' && (
+                                  <div className="flex flex-col items-end">
+                                    <span className="text-xs text-blue-600 mb-1">{file.progress}%</span>
+                                    <Progress value={file.progress} className="h-2 w-16" />
+                                  </div>
+                                )}
+                                {file.status === 'waiting' && (
+                                  <span className="text-xs text-muted-foreground">Chờ...</span>
+                                )}
+                                {file.status === 'success' ? (
+                                  <div className="h-6 w-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-600" viewBox="0 0 20 20" fill="currentColor">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => removeFile(index)}
+                                    className="h-6 w-6 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center"
+                                  >
+                                    <X className="h-3 w-3 text-gray-600" />
+                                  </button>
+                                )}
+                              </div>
                             </li>
                           ))}
                         </ul>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setFiles([])}
-                          className="mt-2"
-                        >
-                          Chọn file khác
-                        </Button>
+                        <div className="flex items-center gap-3 mt-4">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setFiles([])}
+                            className="flex items-center gap-2"
+                            disabled={files.some(f => f.status === 'uploading')}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                            Xóa tất cả
+                          </Button>
+                          
+                          <div className="relative">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="flex items-center gap-2"
+                              disabled={files.some(f => f.status === 'uploading')}
+                            >
+                              <Plus className="h-4 w-4" />
+                              Thêm file khác
+                            </Button>
+                            <Input
+                              type="file"
+                              multiple
+                              accept={Object.keys(SUPPORTED_FILE_TYPES).join(', ')}
+                              onChange={handleFileChange}
+                              className="absolute inset-0 opacity-0 cursor-pointer"
+                              disabled={files.some(f => f.status === 'uploading')}
+                            />
+                          </div>
+                        </div>
                       </div>
                     ) : (
                       <div className="flex flex-col items-center gap-2">
@@ -518,13 +743,26 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
-                  className="space-y-2"
+                  className="space-y-3"
                 >
-                  <div className="flex justify-between text-sm">
-                    <span>Đang tải lên...</span>
-                    <span>{files.reduce((acc, file) => acc + file.progress, 0) / files.length}%</span>
+                  <div className="flex items-center gap-2 bg-blue-50 p-3 rounded-md border border-blue-200">
+                    <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-blue-700 font-medium">Đang tải lên luận văn...</span>
                   </div>
-                  <Progress value={files.reduce((acc, file) => acc + file.progress, 0) / files.length} className="h-2" />
+                  
+                  <div className="bg-slate-50 p-3 rounded-md border">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="font-medium">Tiến độ tải lên tổng thể</span>
+                      <span className="font-semibold text-blue-700">{Math.round(files.reduce((acc, file) => acc + file.progress, 0) / files.length)}%</span>
+                    </div>
+                    <Progress 
+                      value={files.reduce((acc, file) => acc + file.progress, 0) / files.length} 
+                      className="h-2 bg-slate-200" 
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Vui lòng không đóng trình duyệt trong quá trình tải lên luận văn
+                    </p>
+                  </div>
                 </motion.div>
               )}
 

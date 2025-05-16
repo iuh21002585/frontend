@@ -217,7 +217,7 @@ const apiWithCache = {
   ...api,
   
   // Override phương thức GET với hỗ trợ cache
-  async get(url: string, config: any = {}) {
+  async get(url, config = {}) {
     // Kiểm tra xem có bỏ qua cache không
     const skipCache = config?.params?._skipCache || false;
     

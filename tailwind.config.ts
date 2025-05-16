@@ -84,11 +84,44 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'pulse-gentle': {
+					'0%, 100%': {
+						opacity: '1'
+					},
+					'50%': {
+						opacity: '0.7'
+					}
+				},
+				'bell-ring': {
+					'0%': {
+						transform: 'rotate(0deg)'
+					},
+					'1%': {
+						transform: 'rotate(15deg)'
+					},
+					'3%': {
+						transform: 'rotate(-15deg)'
+					},
+					'5%': {
+						transform: 'rotate(15deg)'
+					},
+					'7%': {
+						transform: 'rotate(-15deg)'
+					},
+					'9%': {
+						transform: 'rotate(0deg)'
+					},
+					'100%': {
+						transform: 'rotate(0deg)'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'pulse-gentle': 'pulse-gentle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+				'bell-notification': 'bell-ring 3s ease-in-out infinite'
 			}
 		}
 	},

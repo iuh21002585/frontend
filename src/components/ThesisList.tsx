@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import api from "@/lib/api";
 import {
   Table,
   TableBody,
@@ -32,7 +33,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from "@/lib/api";
 import { calculateSimilarityIndex } from "@/utils/similarityCalculator";
 
 interface Thesis {
@@ -66,11 +66,15 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   const [dataFetched, setDataFetched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const lastFetchTime = useRef<number>(0);
   const minFetchInterval = 30000; // 30 giây
 
   // Lấy danh sách luận văn từ API
   const fetchTheses = async (forceRefresh = false) => {
+    // Khai báo biến isMounted trong scope của hàm
+    let isMounted = true;
+    
     // Nếu có dữ liệu từ component cha và không phải force refresh, sử dụng dữ liệu đó
     if (sharedTheses && !forceRefresh) {
       // Vẫn sử dụng utility function để tính toán
@@ -100,38 +104,71 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
       }
     }
 
-    // Sử dụng cleanup function khi unmount
-    let isMounted = true;
-
     setIsLoading(true);
+    
     try {
-      // Sử dụng tham số để kiểm soát việc sử dụng cache
-      const { data } = await api.get('/theses', {
-        params: {
-          _skipCache: forceRefresh
-        }
-      });
+      // Thêm timeout để tránh các request bị treo quá lâu
+      // Thay vì dùng api.request, sử dụng api.get với params
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000);
       
-      // Sử dụng utility function để tính toán Similarity Index
-      const processedData = data.map((thesis: Thesis) => {
-        return calculateSimilarityIndex(thesis);
-      });
-      
-      // Chỉ cập nhật state nếu component vẫn mounted
-      if (isMounted) {
-        setTheses(processedData);
-        setDataFetched(true);
-        lastFetchTime.current = now;
+      try {
+        // Sử dụng axios trực tiếp với timeout và signal
+        const response = await api.get('/theses', {
+          params: {
+            _skipCache: forceRefresh
+          },
+          timeout: 8000
+        });
         
-        // Gọi callback nếu có
-        if (onThesesLoaded) {
-          onThesesLoaded(processedData);
+        clearTimeout(timeoutId);
+        
+        // Sử dụng utility function để tính toán Similarity Index
+        const processedData = response.data.map((thesis: Thesis) => {
+          return calculateSimilarityIndex(thesis);
+        });
+        
+        if (isMounted) {
+          setTheses(processedData);
+          setDataFetched(true);
+          lastFetchTime.current = Date.now();
+          
+          // Gọi callback nếu có
+          if (onThesesLoaded) {
+            onThesesLoaded(processedData);
+          }
         }
+      } catch (apiError) {
+        clearTimeout(timeoutId);
+        throw apiError;
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Lỗi khi lấy danh sách luận văn:", error);
+      
+      // Import the error handling utility directly here to avoid TypeScript issues
+      const errorMessage = (() => {
+        if (error.name === 'AbortError' || error.code === 'ECONNABORTED') {
+          // Dispatch a custom event that can be caught by the BackendStatusAlert
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('api-timeout', { 
+              detail: { url: '/theses', timestamp: Date.now() } 
+            }));
+          }
+          return "Quá thời gian tải dữ liệu. Hệ thống đang tải chậm, vui lòng thử lại sau.";
+        } else if (error.response) {
+          if (error.response.status === 408 || error.response.status === 504) {
+            return `Máy chủ phản hồi quá chậm (${error.response.status}). Vui lòng thử lại sau.`;
+          }
+          return `Lỗi máy chủ: ${error.response.status}`;
+        } else if (error.request) {
+          return "Không nhận được phản hồi từ máy chủ.";
+        } else {
+          return "Không thể tải danh sách luận văn. Vui lòng thử lại sau.";
+        }
+      })();
+      
       if (isMounted) {
-        setTheses([]);
+        setError(errorMessage);
       }
     } finally {
       if (isMounted) {
@@ -142,23 +179,19 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
         }
       }
     }
-
-    // Trả về cleanup function
-    return () => {
-      isMounted = false;
-    };
   };
 
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
+    let isMounted = true;
     
     if (user) {
-      cleanup = fetchTheses(false);
+      // Gọi hàm fetchTheses nhưng không gán giá trị trả về vào cleanup
+      fetchTheses(false);
     }
     
     // Cleanup khi unmount
     return () => {
-      if (cleanup) cleanup();
+      isMounted = false; // Đánh dấu component đã unmount
     };
   }, [user]);
 
@@ -184,14 +217,15 @@ const ThesisList = ({ shouldRefresh, onRefreshComplete, sharedTheses, onThesesLo
 
   // Theo dõi prop shouldRefresh để làm mới khi cần
   useEffect(() => {
-    let cleanup: (() => void) | undefined;
+    let isMounted = true;
     
     if (shouldRefresh && user) {
-      cleanup = fetchTheses(true); // Force refresh khi shouldRefresh = true
+      // Gọi hàm fetchTheses nhưng không gán giá trị trả về cho cleanup
+      fetchTheses(true); // Force refresh khi shouldRefresh = true
     }
     
     return () => {
-      if (cleanup) cleanup();
+      isMounted = false; // Đánh dấu component đã unmount
     };
   }, [shouldRefresh, user]);
 
