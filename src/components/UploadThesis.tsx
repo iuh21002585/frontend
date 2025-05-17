@@ -53,8 +53,8 @@ const SUPPORTED_FILE_TYPES = {
   "application/vnd.ms-powerpoint": "PPT",
 };
 
-// Kích thước file tối đa (100MB)
-const MAX_FILE_SIZE = 100 * 1024 * 1024;
+// Kích thước file tối đa (15MB) - phải khớp với giới hạn ở backend
+const MAX_FILE_SIZE = 15 * 1024 * 1024;
 
 const formSchema = z.object({
   title: z.string().min(5, {
@@ -378,12 +378,12 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
       return false;
     }
     
-    // Kiểm tra kích thước file (tối đa 100MB)
+    // Kiểm tra kích thước file (tối đa 15MB)
     if (selectedFile.size > MAX_FILE_SIZE) {
       toast({
         variant: "destructive",
         title: "File quá lớn",
-        description: "Kích thước file tối đa là 100MB",
+        description: "Kích thước file tối đa là 15MB",
       });
       return false;
     }
@@ -600,7 +600,7 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
               
               <motion.div variants={itemVariants}>
                 <div className="space-y-2">
-                  <Label htmlFor="thesis-file">File luận văn (Hỗ trợ nhiều định dạng, tối đa 100MB)</Label>
+                  <Label htmlFor="thesis-file">File luận văn (Hỗ trợ nhiều định dạng, tối đa 15MB)</Label>
                   <div
                     className={`border-2 border-dashed rounded-md p-8 text-center transition-colors ${
                       isDragging ? "border-primary bg-primary/5" : "border-muted-foreground/20"
@@ -720,6 +720,7 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
                       <div className="flex flex-col items-center gap-2">
                         <FileUp className="h-12 w-12 text-muted-foreground" />
                         <p className="text-lg font-medium">Kéo & thả file hoặc</p>
+                        <p className="text-sm text-muted-foreground">Tối đa 15MB mỗi file</p>
                         <div className="relative">
                           <Button type="button" variant="outline" className="mt-2">
                             Chọn file

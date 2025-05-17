@@ -690,7 +690,7 @@ const ThesisView = () => {
                 </Badge>
                 {thesis.estimatedCompletionTime && (
                   <div className="text-sm text-muted-foreground mt-1">
-                    <p>Dự kiến hoàn thành: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p>
+                    <p>Thời gian tải lên: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p>
                     <p className="text-xs mt-1">Bạn sẽ nhận được email thông báo khi hoàn tất</p>
                     <Progress value={5} className="h-2 mt-2" />
                   </div>
