@@ -17,6 +17,7 @@ import api from "@/lib/api";
 import { calculateSimilarityIndex } from "@/utils/similarityCalculator";
 import { formatDistanceToNow } from 'date-fns';
 import { vi } from 'date-fns/locale';
+import { RefreshCw } from 'lucide-react';
 
 interface PlagiarismDetail {
   originalText: string;
@@ -24,6 +25,9 @@ interface PlagiarismDetail {
   source: string;
   similarity: number;
   isAiGenerated: boolean;
+  startIndex?: number;
+  endIndex?: number;
+  matchPercentage?: number;
 }
 
 interface TextMatch {
@@ -67,7 +71,6 @@ interface ThesisDetail {
   estimatedCompletionTime?: string;
   completedAt?: string;
   errorMessage?: string;
-  estimatedCompletionTime?: string;
 }
 
 const ThesisView = () => {
@@ -286,7 +289,6 @@ const ThesisView = () => {
       fetchThesisDetail();
     }
   }, [id, toast]);
-
   const handleDownload = async (type: string) => {
     if (!thesis?._id) {
       toast({
@@ -298,33 +300,92 @@ const ThesisView = () => {
     }
 
     try {
-      // Tạo URL đầy đủ đến API endpoint với protocol và host
-      const host = window.location.origin;
-      const downloadUrl = `${host}/api/theses/report/${thesis._id}/${type}`;
-      
-      // Mở URL trong tab mới để download
-      window.open(downloadUrl, '_blank');
-      
+      // Show loading toast
       toast({
-        title: "Đang tải xuống",
-        description: `Báo cáo đạo văn ${type === 'ai' ? 'AI' : 'truyền thống'} đang được tải xuống.`,
+        title: "Đang tạo báo cáo...",
+        description: "Hệ thống đang chuẩn bị báo cáo để tải xuống",
       });
-    } catch (error) {
+      
+      // Sử dụng reportGenerator để tạo báo cáo dựa trên loại báo cáo
+      if (type === 'ai') {
+        // Tạo báo cáo đạo văn AI
+        const { generateAIReport, generatePDF } = await import('@/utils/reportGenerator');
+        const reportElement = generateAIReport(thesis);
+        const filename = `Bao-cao-dao-van-AI-${thesis.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+        
+        try {
+          await generatePDF(reportElement, filename);
+          // Xóa element tạm sau khi đã tạo PDF
+          document.body.removeChild(reportElement);
+          
+          toast({
+            title: "Tạo báo cáo thành công",
+            description: "Báo cáo đã được tải xuống",
+            variant: "default",
+          });
+        } catch (pdfError) {
+          console.error('Lỗi khi tạo PDF:', pdfError);
+          document.body.removeChild(reportElement);
+          
+          // Hiển thị lỗi
+          toast({
+            variant: "destructive",
+            title: "Lỗi tạo báo cáo",
+            description: "Không thể tạo file PDF. Vui lòng thử lại sau.",
+          });
+        }
+      } else {
+        // Tạo báo cáo đạo văn truyền thống
+        const { generateTraditionalReport, generatePDF } = await import('@/utils/reportGenerator');
+        const reportElement = generateTraditionalReport(thesis);
+        const filename = `Bao-cao-dao-van-Truyen-thong-${thesis.title.replace(/[^a-zA-Z0-9]/g, '-')}.pdf`;
+        
+        try {
+          await generatePDF(reportElement, filename);
+          // Xóa element tạm sau khi đã tạo PDF
+          document.body.removeChild(reportElement);
+          
+          toast({
+            title: "Tạo báo cáo thành công",
+            description: "Báo cáo đã được tải xuống",
+            variant: "default",
+          });
+        } catch (pdfError) {
+          console.error('Lỗi khi tạo PDF:', pdfError);
+          document.body.removeChild(reportElement);
+          
+          // Hiển thị lỗi
+          toast({
+            variant: "destructive",
+            title: "Lỗi tạo báo cáo",
+            description: "Không thể tạo file PDF. Vui lòng thử lại sau.",
+          });
+        }
+      }
+    } catch (error: any) {
+      console.error('Lỗi khi tải xuống báo cáo:', error);
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: "Đã xảy ra lỗi khi tải xuống file",
+        title: "Lỗi tải xuống",
+        description: error.message || "Không thể tải xuống báo cáo. Vui lòng thử lại sau.",
       });
     }
   };
-
   const handleDelete = async () => {
     if (!window.confirm("Bạn có chắc chắn muốn xóa luận văn này không?")) {
       return;
     }
 
     try {
-      await api.delete(`/theses/${thesis?._id}`);
+      // Use axios directly instead of our custom api wrapper
+      await fetch(`/api/theses/${thesis?._id}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        credentials: 'include'
+      });
+      
       toast({
         title: "Thành công",
         description: "Đã xóa luận văn thành công",
