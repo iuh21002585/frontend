@@ -765,7 +765,8 @@ const ThesisView = () => {
                 </Badge>
                 {thesis.estimatedCompletionTime && (
                   <div className="text-sm text-muted-foreground mt-1">
-                    <p>Dự kiến hoàn thành: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p>
+                    {/* <p>Dự kiến hoàn thành: {formatDistanceToNow(new Date(thesis.estimatedCompletionTime), { locale: vi, addSuffix: true })}</p> */}
+                    <p>Dự kiến hoàn thành: Hệ thống đang xử lý có thể hoàn thành trong khoảng 15 phút hoặc lâu hơn tùy kích cỡ tài liệu.</p>
                     <p className="text-xs mt-1">Bạn sẽ nhận được email thông báo khi hoàn tất</p>
                     <Progress value={30} className="h-2 mt-2" />
                   </div>

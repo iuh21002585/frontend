@@ -302,7 +302,8 @@ const UploadThesis = ({ onUploadSuccess }: UploadThesisProps) => {
                     Thời gian xử lý:
                   </p>
                   <p className="ml-6 text-sm text-green-700">
-                    Dự kiến hoàn thành: <span className="font-medium">{firstEstimatedTime}</span>
+                    {/* Dự kiến hoàn thành: <span className="font-medium">{firstEstimatedTime}</span> */}
+                    Dự kiến hoàn thành: Hệ thống đang xử lý có thể hoàn thành trong khoảng 15 phút hoặc lâu hơn tùy kích cỡ tài liệu.
                   </p>
                 </div>
                 
