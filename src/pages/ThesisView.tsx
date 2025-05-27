@@ -673,15 +673,15 @@ const ThesisView = () => {
       }
       
       // Add the highlighted text with stronger highlighting for high similarity
-      const intensityClass = highlight.similarity >= 90 ? 'font-medium' : '';
-      const highlightClass = highlight.isAi 
-        ? `bg-purple-100 border border-purple-300 rounded-sm ${intensityClass}` 
-        : `bg-red-100 border border-red-300 rounded-sm ${intensityClass}`;
+      // const intensityClass = highlight.similarity >= 90 ? 'font-medium' : '';
+      // const highlightClass = highlight.isAi 
+      //   ? `bg-purple-100 border border-purple-300 rounded-sm ${intensityClass}` 
+      //   : `bg-red-100 border border-red-300 rounded-sm ${intensityClass}`;
       
-      const highlightedText = displayContent.substring(highlight.start, highlight.end);
-      html += `<span class="${highlightClass}" title="Độ tương đồng: ${highlight.similarity}%">${highlightedText}</span>`;
+      // const highlightedText = displayContent.substring(highlight.start, highlight.end);
+      // html += `<span class="${highlightClass}" title="Độ tương đồng: ${highlight.similarity}%">${highlightedText}</span>`;
       
-      lastPos = highlight.end;
+      // lastPos = highlight.end;
     }
     
     // Add any remaining text after the last highlight
